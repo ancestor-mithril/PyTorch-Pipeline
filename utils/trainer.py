@@ -164,7 +164,7 @@ class Trainer:
         if type(self.scheduler).__name__ in ('ReduceLROnPlateau', 'IncreaseBSOnPlateau'):
             scheduler_metric = 'Val/Accuracy' if not hasattr(
                 self.args, 'scheduler_metric') else self.args.scheduler_metric
-            if type(self.scheduler).__name__ == 'ReduceLROnPlateau':
+            if type(self.scheduler).__name__ == 'IncreaseBSOnPlateau':
                 self.scheduler.step(metric=metrics[scheduler_metric])
                 # TODO: keep the same name
             else:
