@@ -36,4 +36,4 @@ if __name__ == '__main__':
     print(args)
     Trainer(args).run()
 
-# python .\main.py -device cuda:0 -lr 0.001 -bs 10 -epochs 200 -dataset cifar10 -data_path ../data -scheduler ReduceLROnPlateau -scheduler_params "{'mode':'min', 'factor':0.5}" -model preresnet18_c10 -fill 0.5 --cutout --autoaug --tta --half # noqa: E501
+# PYTHONOPTIMIZE=2 python .\main.py -device cuda:0 -lr 0.001 -bs 10 -epochs 200 -dataset cifar10 -data_path ../data -scheduler ReduceLROnPlateau -scheduler_params "{'mode':'min', 'factor':0.5}" -model preresnet18_c10 -fill 0.5 --cutout --autoaug --tta --half # noqa: E501

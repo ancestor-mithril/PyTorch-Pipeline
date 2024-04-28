@@ -49,7 +49,7 @@ class Trainer:
         params.pop('data_path')
 
         params = [f'{k}_{v}' for k, v in params.items()]
-        params = [re.sub(r'[^a-zA-Z0-9_. -]', '_', x) for x in params]
+        params = [re.sub(r'[^a-zA-Z0-9_.-]', '_', x.replace(' ', '')) for x in params]
 
         now = datetime.now()
         logdir = os.path.join(now.strftime('%y-%m-%d'), now.strftime('%H-%M-%S'), *params)
