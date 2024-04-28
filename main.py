@@ -1,5 +1,4 @@
 import argparse
-import ast
 import json
 
 from torch.multiprocessing import freeze_support

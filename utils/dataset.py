@@ -3,7 +3,7 @@ from functools import partial
 from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets import CIFAR10, CIFAR100
 
-from .transforms import DatasetTransforms, init_transforms
+from .transforms import init_transforms
 
 
 def identity(x):

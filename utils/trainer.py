@@ -6,7 +6,7 @@ from timeit import default_timer
 import torch
 from torch.backends import cudnn
 from torch.utils.tensorboard import SummaryWriter
-from torchvision.transforms.v2.functional import hflip, vflip
+from torchvision.transforms.v2.functional import hflip, vflip  # noqa: F401
 from tqdm import tqdm
 
 from models import init_model
