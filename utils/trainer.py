@@ -40,7 +40,7 @@ class Trainer:
         self.optimizer = init_optimizer(args, self.model.parameters())
 
         self.scheduler = init_scheduler(args, self.optimizer, self.train_loader)
-        self.early_stopping = init_early_stopping(args)
+        self.early_stopper = init_early_stopping(args)
 
         self.logdir = self.init_logdir()
         self.writer = SummaryWriter(log_dir=f'runs/{self.logdir}')
@@ -93,6 +93,8 @@ class Trainer:
                     self.post_epoch(metrics)
                     self.write_metrics(epoch, metrics, total_training_time)
                     tbar.set_description(self.epoch_description(metrics))
+                    if self.early_stopping(metrics):
+                        break
         except KeyboardInterrupt:
             pass
         with open("results.txt", "a") as f:
@@ -190,7 +192,6 @@ class Trainer:
         self.empty_cache()
         self.save_checkpoint(metrics)
         self.scheduler_step(metrics)
-        self.early_stopping(metrics)
 
     def epoch_description(self, metrics):
         train_acc = round(metrics["Train/Accuracy"], 2)
@@ -200,4 +201,4 @@ class Trainer:
 
     def early_stopping(self, metrics):
         es_metric = metrics[self.es_metric]
-        self.early_stopping.step(es_metric)
+        return self.early_stopper.step(es_metric)
