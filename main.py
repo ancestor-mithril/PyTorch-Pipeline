@@ -28,6 +28,7 @@ if __name__ == '__main__':
     parser.add_argument('--autoaug', action='store_true', default=False, help='apply autoaugment')
     parser.add_argument('--tta', action='store_true', default=False, help='use TTA')
     parser.add_argument('--half', action='store_true', default=False, help='half')
+    parser.add_argument('--disable_progress_bar', action='store_true', default=False, help='disable tqdm')
 
     args = parser.parse_args()
     args.scheduler_params = json.loads(args.scheduler_params.replace('\'', '"'))

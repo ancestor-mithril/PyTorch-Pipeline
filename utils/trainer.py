@@ -85,7 +85,7 @@ class Trainer:
         epochs = list(range(self.args.epochs))
         total_training_time = 0
         try:
-            with tqdm(epochs) as tbar:
+            with tqdm(epochs, disable=self.args.disable_progress_bar) as tbar:
                 for epoch in tbar:
                     metrics, elapsed = self.train()
                     total_training_time += elapsed / 1e+9
