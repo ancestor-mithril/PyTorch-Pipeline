@@ -1,9 +1,9 @@
 import os
 import re
 from datetime import datetime
-from timeit import default_timer
 
 import torch
+from timed_decorator.simple_timed import timed
 from torch.backends import cudnn
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.transforms.v2.functional import hflip, vflip  # noqa: F401
@@ -62,16 +62,13 @@ class Trainer:
         return self.train_loader.batch_sampler.batch_size
 
     def run(self):
-        # TODO: Implement return time instead of printing
         epochs = list(range(self.args.epochs))
         total_training_time = 0
         try:
             with tqdm(epochs) as tbar:
                 for epoch in tbar:
-                    start = default_timer()
-                    metrics = self.train()
-                    end = default_timer()
-                    total_training_time += end - start
+                    metrics, elapsed = self.train()
+                    total_training_time += elapsed / 1e+9
 
                     metrics.update(self.val())
 
@@ -84,6 +81,7 @@ class Trainer:
             f.write(f'{self.logdir} -> {self.best_metric}\n')
         print("Best:", self.best_metric)
 
+    @timed(stdout=False, return_time=True)
     def train(self):
         self.model.train()
         correct = 0

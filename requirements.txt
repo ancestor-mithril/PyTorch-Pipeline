@@ -1,4 +1,6 @@
 torch
 torchvision
 bs_scheduler
-timed-decorator
+timed-decorator>=1.3.0
+tqdm
+argparse
