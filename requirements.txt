@@ -1,0 +1,4 @@
+torch
+torchvision
+bs_scheduler
+timed-decorator
