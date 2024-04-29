@@ -23,6 +23,7 @@ if __name__ == '__main__':
     parser.add_argument('-model', default='preresnet18_c10', type=str, help='model')
     parser.add_argument('-fill', default=None, type=float, help='fill value for transformations')
     parser.add_argument('-num_threads', default=None, type=int, help='default number of threads used by pytorch')
+    parser.add_argument('-seed', default=3, type=int, help='seed')
     parser.add_argument('--cutout', action='store_true', default=False, help='apply cutout')
     parser.add_argument('--autoaug', action='store_true', default=False, help='apply autoaugment')
     parser.add_argument('--tta', action='store_true', default=False, help='use TTA')
@@ -38,6 +39,5 @@ if __name__ == '__main__':
     print(args)
     Trainer(args).run()
 
-# TODO: Factor could be int
 # PYTHONOPTIMIZE=2 python main.py -device cuda:0 -lr 0.001 -bs 10 -epochs 200 -dataset cifar10 -data_path ../data -scheduler ReduceLROnPlateau -scheduler_params "{'mode':'min', 'factor':0.5}" -model preresnet18_c10 -fill 0.5 --cutout --autoaug --tta --half # noqa: E501
 # PYTHONOPTIMIZE=2 python main.py -device cuda:0 -lr 0.001 -bs 10 -epochs 200 -dataset cifar10 -data_path ../data -scheduler IncreaseBSOnPlateau -scheduler_params "{'mode':'min', 'factor':2.0, 'max_batch_size': 1000}" -model preresnet18_c10 -fill 0.5 --cutout --autoaug --tta --half # noqa: E501

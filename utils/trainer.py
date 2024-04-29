@@ -16,11 +16,13 @@ from utils.loss import init_criterion
 from utils.optimizer import init_optimizer
 from utils.scheduler import init_scheduler
 from utils.early_stopping import init_early_stopping
+from utils.utils import seed_everything
 
 
 class Trainer:
     def __init__(self, args):
         self.args = args
+        seed_everything(args.seed)
 
         self.device = torch.device(args.device)
         print(f'Using {self.device}')
