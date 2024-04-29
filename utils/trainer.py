@@ -15,6 +15,7 @@ from utils.dataset import init_dataset, init_loaders
 from utils.loss import init_criterion
 from utils.optimizer import init_optimizer
 from utils.scheduler import init_scheduler
+from utils.early_stopping import init_early_stopping
 
 
 class Trainer:
@@ -39,6 +40,7 @@ class Trainer:
         self.optimizer = init_optimizer(args, self.model.parameters())
 
         self.scheduler = init_scheduler(args, self.optimizer, self.train_loader)
+        self.early_stopping = init_early_stopping(args)
 
         self.logdir = self.init_logdir()
         self.writer = SummaryWriter(log_dir=f'runs/{self.logdir}')
@@ -46,11 +48,18 @@ class Trainer:
 
     @cached_property
     def scheduler_metric(self):
+        # TODO: Remove this after adding self.args.scheduler_metric
         return 'Train/Loss' if not hasattr(self.args, 'scheduler_metric') else self.args.scheduler_metric
 
     @cached_property
     def optimized_metric(self):
+        # TODO: Remove this after adding self.args.optimized_metric
         return 'Val/Accuracy' if not hasattr(self.args, 'optimized_metric') else self.args.optimized_metric
+
+    @cached_property
+    def es_metric(self):
+        # TODO: Remove this after adding self.args.es_metric
+        return 'Train/Loss' if not hasattr(self.args, 'es_metric') else self.args.es_metric
 
     def init_logdir(self):
         params = self.args.__dict__
@@ -190,5 +199,5 @@ class Trainer:
         return f'Train: {train_acc}, Val: {val_acc}, Best: {best}'
 
     def early_stopping(self, metrics):
-        # TODO: Implement early stopping
-        pass
+        es_metric = metrics[self.es_metric]
+        self.early_stopping.step(es_metric)

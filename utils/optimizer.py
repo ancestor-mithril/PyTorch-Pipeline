@@ -14,7 +14,8 @@ def init_optimizer(args, parameters) -> Optimizer:
         'weight_decay': weight_decay,
     }
     if torch.torch_version.TorchVersion(torch.__version__) >= '2.3.0':
-        kwargs['fused'] = True
+        if args.device != 'cpu':
+            kwargs['fused'] = True
     else:
         import warnings
         warnings.warn("Upgrade torch to support fused optimizers")

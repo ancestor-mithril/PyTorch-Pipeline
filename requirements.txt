@@ -4,3 +4,4 @@ bs_scheduler
 timed-decorator>=1.3.0
 tqdm
 argparse
+numpy
