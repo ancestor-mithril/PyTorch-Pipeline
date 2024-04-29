@@ -1,6 +1,7 @@
 import os
 import re
 from datetime import datetime
+from functools import cached_property
 
 import torch
 from timed_decorator.simple_timed import timed
@@ -42,6 +43,14 @@ class Trainer:
         self.logdir = self.init_logdir()
         self.writer = SummaryWriter(log_dir=f'runs/{self.logdir}')
         self.best_metric = 0.0
+
+    @cached_property
+    def scheduler_metric(self):
+        return 'Train/Loss' if not hasattr(self.args, 'scheduler_metric') else self.args.scheduler_metric
+
+    @cached_property
+    def optimized_metric(self):
+        return 'Val/Accuracy' if not hasattr(self.args, 'optimized_metric') else self.args.optimized_metric
 
     def init_logdir(self):
         params = self.args.__dict__
@@ -136,9 +145,7 @@ class Trainer:
         }
 
     def save_checkpoint(self, metrics):
-        optimized_metric = 'Val/Accuracy' if not hasattr(
-            self.args, 'optimized_metric') else self.args.optimized_metric
-        optimized_metric = metrics[optimized_metric]
+        optimized_metric = metrics[self.optimized_metric]
         if optimized_metric > self.best_metric:
             self.best_metric = optimized_metric
             # TODO: Save model if saving is enabled
@@ -160,13 +167,13 @@ class Trainer:
             return
 
         if type(self.scheduler).__name__ in ('ReduceLROnPlateau', 'IncreaseBSOnPlateau'):
-            scheduler_metric = 'Val/Accuracy' if not hasattr(
-                self.args, 'scheduler_metric') else self.args.scheduler_metric
+            scheduler_metric = metrics[self.scheduler_metric]
+
             if type(self.scheduler).__name__ == 'IncreaseBSOnPlateau':
-                self.scheduler.step(metric=metrics[scheduler_metric])
+                self.scheduler.step(metric=scheduler_metric)
                 # TODO: keep the same name
             else:
-                self.scheduler.step(metrics[scheduler_metric])
+                self.scheduler.step(scheduler_metric)
         else:
             self.scheduler.step()
 
