@@ -1,16 +1,14 @@
 import argparse
 import json
+import multiprocessing
 
+import torch
 from torch.multiprocessing import freeze_support
 
 from utils.trainer import Trainer
 
 if __name__ == '__main__':
     freeze_support()
-
-    # Namespace(device='cuda:0', lr=0.001, bs=10, epochs=200, dataset='cifar10', scheduler='ReduceLROnPlateau',
-    #           scheduler_params={'mode': 'min', 'factor': 0.5}, cutout=True, autoaug=True, model='preresnet', fill=0.5,
-    #           tta=True, half=True) -> 0.0
 
     parser = argparse.ArgumentParser(description='PyTorch Pipeline')
     parser.add_argument('-device', default='cuda:0', type=str, help='device')
@@ -24,6 +22,7 @@ if __name__ == '__main__':
                         help='scheduler_params')
     parser.add_argument('-model', default='preresnet18_c10', type=str, help='model')
     parser.add_argument('-fill', default=None, type=float, help='fill value for transformations')
+    parser.add_argument('-num_threads', default=None, type=int, help='default number of threads used by pytorch')
     parser.add_argument('--cutout', action='store_true', default=False, help='apply cutout')
     parser.add_argument('--autoaug', action='store_true', default=False, help='apply autoaugment')
     parser.add_argument('--tta', action='store_true', default=False, help='use TTA')
@@ -31,6 +30,10 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
     args.scheduler_params = json.loads(args.scheduler_params.replace('\'', '"'))
+
+    if args.num_threads is None:
+        args.num_threads = multiprocessing.cpu_count() // 2  # use half the available threads
+    torch.set_num_threads(args.num_threads)
 
     print(args)
     Trainer(args).run()
