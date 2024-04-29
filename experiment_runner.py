@@ -36,7 +36,7 @@ def run_command(command_idx):
     try:
         start = time.time()
         with open(f"./logs/error_{idx}_{today}.txt", 'a+') as err:
-            subprocess.run(command, shell=True, check=True, stderr=err)
+            subprocess.run(command, shell=True, check=True, stderr=err, env={**os.environ, "PYTHONOPTIMIZE": "2"})
         os.remove(f"./logs/error_{idx}_{today}.txt")
         elapsed = (time.time() - start)
         with open("./logs/finished_runs.txt", "a+") as fp:
