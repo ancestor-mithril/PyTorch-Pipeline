@@ -65,7 +65,7 @@ def create_run(dataset, model, optimizer, seed, epochs, es_patience, batch_size,
         f" --cutout"
         f" --autoaug"
         f" --tta"
-    ) + " --half" if torch.cuda.is_available() else ""
+    ) + (" --half" if torch.cuda.is_available() else "")
 
 
 def generate_runs():
@@ -82,7 +82,7 @@ def generate_runs():
         2525
     ]
     epochss = [
-        10
+        200
     ]
     es_patiences = [
         20
