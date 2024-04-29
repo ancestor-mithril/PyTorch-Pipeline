@@ -49,7 +49,7 @@ def init_dataset(args):
                                   cache=cache_train_dataset)
 
     test_dataset = dataset_fn(train=False, transform=transforms.test_cached())
-    test_dataset = CachedDataset(test_dataset, transforms=transforms.train_runtime(), num_classes=num_classes,
+    test_dataset = CachedDataset(test_dataset, transforms=transforms.test_runtime(), num_classes=num_classes,
                                  cache=cache_test_dataset)
 
     return train_dataset, test_dataset

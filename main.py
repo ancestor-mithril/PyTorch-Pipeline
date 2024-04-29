@@ -18,7 +18,7 @@ if __name__ == '__main__':
     parser.add_argument('-bs', default=10, type=int, help='batch size')
     parser.add_argument('-epochs', default=200, type=int, help='train epochs')
     parser.add_argument('-dataset', default='cifar10', type=str, help='dataset')
-    parser.add_argument('-data_path', default='./data', type=str, help='path to dataset')
+    parser.add_argument('-data_path', default='../data', type=str, help='path to dataset')
     parser.add_argument('-scheduler', default='ReduceLROnPlateau', type=str, help='scheduler')
     parser.add_argument('-scheduler_params', default='{"mode":"min", "factor":0.5}', type=str,
                         help='scheduler_params')
