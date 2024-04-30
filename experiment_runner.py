@@ -71,6 +71,7 @@ def create_run(dataset, model, optimizer, seed, epochs, es_patience, batch_size,
 
 def generate_runs():
     datasets = [
+        # 'cifar10',
         'cifar10', 'cifar100'
     ]
     models = [
@@ -83,29 +84,48 @@ def generate_runs():
         2525
     ]
     epochss = [
-        200
+        5
     ]
     es_patiences = [
         20
     ]
     batch_sizes = [
+        # 10,
         10, 16, 32
     ]
     schedulers = [
-        ('IncreaseBSOnPlateau', {'mode': 'min', 'factor': 2.0, 'max_batch_size': max_batch_size}),
-        ('IncreaseBSOnPlateau', {'mode': 'min', 'factor': 5.0, 'max_batch_size': max_batch_size}),
-        ('ReduceLROnPlateau', {'mode': 'min', 'factor': 0.5}),
-        ('ReduceLROnPlateau', {'mode': 'min', 'factor': 0.2}),
+        # ('IncreaseBSOnPlateau', {'mode': 'min', 'factor': 2.0, 'max_batch_size': max_batch_size}),
+        # ('IncreaseBSOnPlateau', {'mode': 'min', 'factor': 5.0, 'max_batch_size': max_batch_size}),
+        # ('ReduceLROnPlateau', {'mode': 'min', 'factor': 0.5}),
+        # ('ReduceLROnPlateau', {'mode': 'min', 'factor': 0.2}),
+        #
+        # ('StepBS', {'step_size': 30, 'gamma': 2.0, 'max_batch_size': max_batch_size}),
+        # ('StepBS', {'step_size': 50, 'gamma': 2.0, 'max_batch_size': max_batch_size}),
+        # ('StepBS', {'step_size': 30, 'gamma': 5.0, 'max_batch_size': max_batch_size}),
+        # ('StepBS', {'step_size': 50, 'gamma': 5.0, 'max_batch_size': max_batch_size}),
+        #
+        # ('StepLR', {'step_size': 30, 'gamma': 2.0}),
+        # ('StepLR', {'step_size': 50, 'gamma': 2.0}),
+        # ('StepLR', {'step_size': 30, 'gamma': 5.0}),
+        # ('StepLR', {'step_size': 50, 'gamma': 5.0}),
 
-        ('StepBS', {'step_size': 30, 'gamma': 2.0, 'max_batch_size': max_batch_size}),
-        ('StepBS', {'step_size': 50, 'gamma': 2.0, 'max_batch_size': max_batch_size}),
-        ('StepBS', {'step_size': 30, 'gamma': 5.0, 'max_batch_size': max_batch_size}),
-        ('StepBS', {'step_size': 50, 'gamma': 5.0, 'max_batch_size': max_batch_size}),
+        # ('ExponentialBS', {'gamma': 1.1, 'max_batch_size': 1000}),
+        # ('ExponentialLR', {'gamma': 0.9}),
 
-        ('StepLR', {'step_size': 30, 'gamma': 2.0}),
-        ('StepLR', {'step_size': 50, 'gamma': 2.0}),
-        ('StepLR', {'step_size': 30, 'gamma': 5.0}),
-        ('StepLR', {'step_size': 50, 'gamma': 5.0}),
+        # ('PolynomialBS', {'total_iters':200, 'max_batch_size': 1000}),
+        # ('PolynomialLR', {'total_iters':200}),
+
+        # ('CosineAnnealingBS', {'total_iters': 200, 'max_batch_size': 1000}),
+        # ('CosineAnnealingLR', {'T_max': 200, }),
+        #
+        # ('CosineAnnealingBSWithWarmRestarts', {'t_0': 100, 'factor': 1, 'max_batch_size': 1000}),
+        # ('CosineAnnealingWarmRestarts', {'T_0': 100, 'T_mult': 1}),
+        #
+        # ('CyclicBS', {'min_batch_size':10, 'base_batch_size': 500, 'step_size_down': 20, 'mode': 'triangular2', 'max_batch_size': 1000}),
+        # ('CyclicLR', {'base_lr':0.0001, 'max_lr': 0.01, 'step_size_up': 20, 'mode': 'triangular2'}),
+        #
+        # ('OneCycleBS', {'total_steps':200, 'base_batch_size': 300, 'min_batch_size': 10, 'max_batch_size': 1000}),
+        # ('OneCycleLR', {'total_steps':200, 'max_lr': 0.01}),
     ]
 
     runs = []
