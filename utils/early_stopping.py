@@ -56,4 +56,3 @@ class EarlyStopping:
 def init_early_stopping(args):
     es_patience = 20 if not hasattr(args, 'es_patience') else args.es_patience
     return EarlyStopping(mode='min', min_delta=0.0, patience=es_patience)
-

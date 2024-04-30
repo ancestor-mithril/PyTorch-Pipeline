@@ -6,7 +6,7 @@ from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, ExponentialLR, P
 from torch.utils.data import DataLoader
 
 
-def init_scheduler(args, optimizer: Optimizer, train_loader: DataLoader):
+def init_scheduler(args, optimizer: Optimizer, train_loader: DataLoader):  # noqa C901
     if args.scheduler == 'IncreaseBSOnPlateau':
         # "{'mode':'min', 'factor':2.0, 'max_batch_size': 1000}"
 
