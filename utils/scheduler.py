@@ -43,7 +43,7 @@ def init_scheduler(args, optimizer: Optimizer, train_loader: DataLoader):  # noq
         assert 'gamma' in args.scheduler_params
         scheduler = ExponentialLR(optimizer, **args.scheduler_params)
 
-    elif args.scheduler == 'PolynomialBS ':
+    elif args.scheduler == 'PolynomialBS':
         # "{'total_iters':200, 'max_batch_size': 1000}"
 
         assert 'total_iters' in args.scheduler_params
@@ -56,7 +56,7 @@ def init_scheduler(args, optimizer: Optimizer, train_loader: DataLoader):  # noq
         assert 'total_iters' in args.scheduler_params
         scheduler = PolynomialLR(optimizer, **args.scheduler_params)
 
-    elif args.scheduler == 'CosineAnnealingBS ':
+    elif args.scheduler == 'CosineAnnealingBS':
         # "{'total_iters':200, 'max_batch_size': 1000}"
 
         assert 'total_iters' in args.scheduler_params
@@ -69,7 +69,7 @@ def init_scheduler(args, optimizer: Optimizer, train_loader: DataLoader):  # noq
         assert 'T_max' in args.scheduler_params
         scheduler = CosineAnnealingLR(optimizer, **args.scheduler_params)
 
-    elif args.scheduler == 'CosineAnnealingBSWithWarmRestarts  ':
+    elif args.scheduler == 'CosineAnnealingBSWithWarmRestarts':
         # "{'t_0':100, 'factor':1, 'max_batch_size': 1000}"
 
         assert 't_0' in args.scheduler_params
@@ -77,7 +77,7 @@ def init_scheduler(args, optimizer: Optimizer, train_loader: DataLoader):  # noq
         assert 'max_batch_size' in args.scheduler_params
         scheduler = CosineAnnealingBSWithWarmRestarts(train_loader, **args.scheduler_params)
 
-    elif args.scheduler == 'CosineAnnealingWarmRestarts ':
+    elif args.scheduler == 'CosineAnnealingWarmRestarts':
         # "{'T_0':100, 'T_mult': 1}"
 
         assert 'T_0' in args.scheduler_params
