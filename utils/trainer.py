@@ -67,8 +67,18 @@ class Trainer:
         params = self.args.__dict__
         params.pop('device')
         params.pop('data_path')
+        params.pop('disable_progress_bar')
+        params.pop('half')
+        params.pop('num_threads')
 
-        params = [f'{k}_{v}' for k, v in params.items()]
+        no_keys = [
+            'dataset',
+            'scheduler'
+            'scheduler_params'
+            'model'
+        ]
+
+        params = [f'{k}_{v}' if k not in no_keys else f'{v}' for k, v in params.items()]
         params = [re.sub(r'[^a-zA-Z0-9_.-]', '_', x.replace(' ', '')) for x in params]
         params = [re.sub('_+', '_', x) for x in params]
 
