@@ -104,10 +104,10 @@ def generate_runs():
         # ('StepBS', {'step_size': 30, 'gamma': 5.0, 'max_batch_size': max_batch_size}),
         # ('StepBS', {'step_size': 50, 'gamma': 5.0, 'max_batch_size': max_batch_size}),
         #
-        # ('StepLR', {'step_size': 30, 'gamma': 2.0}),
-        # ('StepLR', {'step_size': 50, 'gamma': 2.0}),
-        # ('StepLR', {'step_size': 30, 'gamma': 5.0}),
-        # ('StepLR', {'step_size': 50, 'gamma': 5.0}),
+        # ('StepLR', {'step_size': 30, 'gamma': 0.5}),
+        # ('StepLR', {'step_size': 50, 'gamma': 0.5}),
+        # ('StepLR', {'step_size': 30, 'gamma': 0.2}),
+        # ('StepLR', {'step_size': 50, 'gamma': 0.2}),
 
         # ('ExponentialBS', {'gamma': 1.1, 'max_batch_size': 1000}),
         # ('ExponentialLR', {'gamma': 0.9}),
