@@ -64,7 +64,7 @@ class Trainer:
         return 'Train/Loss' if not hasattr(self.args, 'es_metric') else self.args.es_metric
 
     def init_logdir(self):
-        params = self.args.__dict__
+        params = {**self.args.__dict__}
         params.pop('device')
         params.pop('data_path')
         params.pop('disable_progress_bar')
