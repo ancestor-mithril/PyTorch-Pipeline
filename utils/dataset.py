@@ -1,7 +1,7 @@
 from functools import partial
 
 from torch.utils.data import Dataset, DataLoader
-from torchvision.datasets import CIFAR10, CIFAR100
+from torchvision.datasets import CIFAR10, CIFAR100, FashionMNIST
 
 from .transforms import init_transforms
 
@@ -36,6 +36,9 @@ def init_dataset(args):
     elif args.dataset == 'cifar100':
         dataset_fn = partial(CIFAR100, root=args.data_path, download=True)
         num_classes = 100
+    elif args.dataset == 'FashionMNIST':
+        dataset_fn = partial(FashionMNIST, root=args.data_path, download=True)
+        num_classes = 10
     else:
         raise NotImplementedError(f'Dataset {args.dataset} not implemented')
 
