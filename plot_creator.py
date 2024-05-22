@@ -149,6 +149,10 @@ def create_tex(group_results, results_dir):
         'ExponentialLR': 'ExpLR',
         'PolynomialBS': 'PolyBS',
         'PolynomialLR': 'PolyLR',
+        'CyclicBS': 'CyclicBS',
+        'CyclicLR': 'CyclicLR',
+        'OneCycleBS': '1CycleBS',
+        'OneCycleLR': '1CycleLR',
     }
 
     tex_file = os.path.join(results_dir, 'results_table.txt')
