@@ -41,8 +41,12 @@ def match_paths_by_criteria(tb_paths):
 
         ('CosineAnnealingBSWithWarmRestarts', 't_0_100_factor_1_max_batch_size_1000_'):
             ('CosineAnnealingWarmRestarts', 'T_0_100_T_mult_1_'),
+        ('CosineAnnealingBSWithWarmRestarts', 't_0_100_factor_2_max_batch_size_1000_'):
+            ('CosineAnnealingWarmRestarts', 'T_0_100_T_mult_2_'),
         ('CosineAnnealingBSWithWarmRestarts', 't_0_50_factor_1_max_batch_size_1000_'):
             ('CosineAnnealingWarmRestarts', 'T_0_50_T_mult_1_'),
+        ('CosineAnnealingBSWithWarmRestarts', 't_0_50_factor_2_max_batch_size_1000_'):
+            ('CosineAnnealingWarmRestarts', 'T_0_50_T_mult_2_'),
 
         ('ExponentialBS', 'gamma_1.1_max_batch_size_1000_'):
             ('ExponentialLR', 'gamma_0.9_'),
@@ -65,6 +69,12 @@ def match_paths_by_criteria(tb_paths):
             ('StepLR', 'step_size_30_gamma_0.2_'),
         ('StepBS', 'step_size_50_gamma_5.0_max_batch_size_1000_'):
             ('StepLR', 'step_size_50_gamma_0.2_'),
+
+        ('OneCycleBS', 'total_steps_200_base_batch_size_300_min_batch_size_10_max_batch_size_1000_'):
+            ('OneCycleLR', 'total_steps_200_max_lr_0.01_'),
+
+        ('CyclicBS', 'min_batch_size_10_base_batch_size_500_step_size_down_20_mode_triangular2_max_batch_size_1000_'):
+            ('CyclicLR', 'base_lr_0.0001_max_lr_0.01_step_size_up_20_mode_triangular2_'),
     }
     match_rules.update({v: k for k, v in match_rules.items()})  # reversed rules
 
