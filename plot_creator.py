@@ -30,6 +30,10 @@ def parse_scheduler_type(path):
     return scheduler, scheduler_params, bs
 
 
+def parse_seed_type(path):
+    return path.split(os.path.sep + 'seed_')[1].split(os.path.sep)[0]
+
+
 def match_paths_by_criteria(tb_paths):
     match_rules = {
         ('CosineAnnealingBS', 'total_iters_100_max_batch_size_1000_'):
@@ -83,11 +87,13 @@ def match_paths_by_criteria(tb_paths):
         current_path = tb_paths.pop(0)
         dataset = parse_dataset_name(current_path)
         scheduler, scheduler_param, initial_batch_size = parse_scheduler_type(current_path)
+        seed = parse_seed_type(current_path)
 
         def is_ok(other_path):
             other_dataset = parse_dataset_name(other_path)
             other_scheduler, other_scheduler_param, other_initial_batch_size = parse_scheduler_type(other_path)
-            if other_dataset != dataset or other_initial_batch_size != initial_batch_size:
+            other_seed = parse_seed_type(other_path)
+            if other_dataset != dataset or other_initial_batch_size != initial_batch_size or other_seed != seed:
                 return False
             if match_rules[(scheduler, scheduler_param)] != (other_scheduler, other_scheduler_param):
                 return False
@@ -115,7 +121,7 @@ def parse_tensorboard(path):
     experiment_time = round(scalars['Train/Time'][epoch - 1] / 3600, 2)
     max_train_accuracy = round(max(scalars['Train/Accuracy'][:epoch]), 2)
     max_val_accuracy = round(max(scalars['Val/Accuracy'][:epoch]), 2)
-    initial_learning_rate = round(scalars['Trainer/Learning Rate'][0], 2)
+    initial_learning_rate = scalars['Trainer/Learning Rate'][0]
     return {
         'dataset': dataset,
         'scheduler': scheduler,
@@ -131,7 +137,7 @@ def parse_tensorboard(path):
         'val_accuracies': tuple([x / 100 for x in scalars['Val/Accuracy'][:epoch]]),
         'batch_sizes': scalars['Trainer/Batch Size'][:epoch],
         'learning_rates': scalars['Trainer/Learning Rate'][:epoch],
-
+        'seed': parse_seed_type(path),
     }
 
 
@@ -234,7 +240,7 @@ def create_graphics(group_results, results_dir):
         plt.savefig(os.path.join(results_dir, 'plots', f"{exp_1['scheduler']}_"
                                                        f"{exp_1['dataset']}_{exp_1['initial_batch_size']}_"
                                                        f"{exp_1['scheduler_param']}_"
-                                                       f"{exp_1['initial_learning_rate']}_first.png"),
+                                                       f"{exp_1['initial_learning_rate']}_{exp_1['seed']}_first.png"),
                     bbox_inches='tight')
         plt.close()
 
@@ -254,7 +260,7 @@ def create_graphics(group_results, results_dir):
         plt.savefig(os.path.join(results_dir, 'plots', f"{exp_1['scheduler']}_"
                                                        f"{exp_1['dataset']}_{exp_1['initial_batch_size']}_"
                                                        f"{exp_1['scheduler_param']}_"
-                                                       f"{exp_1['initial_learning_rate']}_second.png"),
+                                                       f"{exp_1['initial_learning_rate']}_{exp_1['seed']}_second.png"),
                     bbox_inches='tight')
         plt.close()
 
