@@ -1,12 +1,16 @@
 import glob
+import json
 import os
 import warnings
 
+import numpy as np
 import seaborn as sns
 import pandas as pd
 from matplotlib import pyplot as plt
 from tensorboard.backend.event_processing import event_accumulator
 from tqdm import tqdm
+
+global_stats = {'schedulers': {}, 'experiments': {}}
 
 
 def get_tensorboard_scalars(path):
@@ -34,7 +38,7 @@ def parse_seed_type(path):
     return path.split(os.path.sep + 'seed_')[1].split(os.path.sep)[0]
 
 
-def match_paths_by_criteria(tb_paths):
+def get_match_rules():
     match_rules = {
         ('CosineAnnealingBS', 'total_iters_100_max_batch_size_1000_'):
             ('CosineAnnealingLR', 'T_max_100_'),
@@ -81,6 +85,62 @@ def match_paths_by_criteria(tb_paths):
             ('CyclicLR', 'base_lr_0.0001_max_lr_0.01_step_size_up_20_mode_triangular2_'),
     }
     match_rules.update({v: k for k, v in match_rules.items()})  # reversed rules
+    return match_rules
+
+
+def transform_scheduler_params(x):
+    params = {
+        'total_iters_100_max_batch_size_1000_': '100',
+        'T_max_100_': '100',
+        'total_iters_200_max_batch_size_1000_': '200',
+        'T_max_200_': '200',
+        'total_iters_50_max_batch_size_1000_': '50',
+        'T_max_50_': '50',
+
+        't_0_100_factor_1_max_batch_size_1000_': '100,1',
+        'T_0_100_T_mult_1_': '100,1',
+        't_0_100_factor_2_max_batch_size_1000_': '100,2',
+        'T_0_100_T_mult_2_': '100,2',
+        't_0_50_factor_1_max_batch_size_1000_': '50,1',
+        'T_0_50_T_mult_1_': '50,1',
+        't_0_50_factor_2_max_batch_size_1000_': '50,2',
+        'T_0_50_T_mult_2_': '50,2',
+
+        'gamma_1.1_max_batch_size_1000_': '1.1',
+        'gamma_0.9_': '0.9',
+        'gamma_2_max_batch_size_1000_': '2',
+        'gamma_0.5_': '0.5',
+
+        'mode_min_factor_2.0_max_batch_size_1000_': '2.0',
+        'mode_min_factor_0.5_': '0.5',
+        'mode_min_factor_5.0_max_batch_size_1000_': '5.0',
+        'mode_min_factor_0.2_': '0.2',
+
+        # 'total_iters_200_max_batch_size_1000_': '200',
+        'total_iters_200_': '200',
+
+        'step_size_30_gamma_2.0_max_batch_size_1000_': '30,2.0',
+        'step_size_30_gamma_0.5_': '30,0.5',
+        'step_size_50_gamma_2.0_max_batch_size_1000_': '50,2.0',
+        'step_size_50_gamma_0.5_': '50,0.5',
+        'step_size_30_gamma_5.0_max_batch_size_1000_': '30,5.0',
+        'step_size_30_gamma_0.2_': '30,0.2',
+        'step_size_50_gamma_5.0_max_batch_size_1000_': '50,5.0',
+        'step_size_50_gamma_0.2_': '50,0.2',
+
+        # FIXME: tadam
+        'total_steps_200_base_batch_size_300_min_batch_size_10_max_batch_size_1000_': '',
+        'total_steps_200_max_lr_0.01_': '',
+
+        # FIXME: tadam
+        'min_batch_size_10_base_batch_size_500_step_size_down_20_mode_triangular2_max_batch_size_1000_': '',
+        'base_lr_0.0001_max_lr_0.01_step_size_up_20_mode_triangular2_': '',
+    }
+    return params[x]
+
+
+def match_paths_by_criteria(tb_paths):
+    match_rules = get_match_rules()
 
     groups = []
     while len(tb_paths):
@@ -109,6 +169,8 @@ def match_paths_by_criteria(tb_paths):
 
         groups.append((current_path, *matching))
 
+    groups = sorted(groups)
+    groups = sorted(groups, key=lambda x: parse_scheduler_type(x[0])[0])
     return groups
 
 
@@ -121,7 +183,7 @@ def parse_tensorboard(path):
     experiment_time = round(scalars['Train/Time'][epoch - 1] / 3600, 2)
     max_train_accuracy = round(max(scalars['Train/Accuracy'][:epoch]), 2)
     max_val_accuracy = round(max(scalars['Val/Accuracy'][:epoch]), 2)
-    initial_learning_rate = scalars['Trainer/Learning Rate'][0]
+    initial_learning_rate = round(scalars['Trainer/Learning Rate'][0], 5)
     return {
         'dataset': dataset,
         'scheduler': scheduler,
@@ -138,10 +200,11 @@ def parse_tensorboard(path):
         'batch_sizes': scalars['Trainer/Batch Size'][:epoch],
         'learning_rates': scalars['Trainer/Learning Rate'][:epoch],
         'seed': parse_seed_type(path),
+        'hash': f"{dataset}_{scheduler}_{scheduler_param}_{initial_batch_size}_{initial_learning_rate}"
     }
 
 
-def create_tex(group_results, results_dir):
+def get_scheduler_acronym(x):
     scheduler_acronym = {
         'IncreaseBSOnPlateau': 'IBS',
         'ReduceLROnPlateau': 'RLR',
@@ -160,8 +223,68 @@ def create_tex(group_results, results_dir):
         'OneCycleBS': '1CycleBS',
         'OneCycleLR': '1CycleLR',
     }
+    return scheduler_acronym[x]
 
+
+def register_stats(group_results):
+    r1, r2 = group_results
+    length = min([x['train_epochs'] for x in group_results])
+    scheduler_combination = f"{r1['dataset']}_{r1['scheduler']}_{r2['scheduler']}"
+    experiment_combination = f"{r1['hash']}--__--{r2['hash']}"
+
+    experiment_time_1 = r1['experiment_times'][length - 1] / 3600
+    experiment_time_2 = r2['experiment_times'][length - 1] / 3600
+    max_val_accuracy_1 = max(r1['val_accuracies'][:length])
+    max_val_accuracy_2 = max(r2['val_accuracies'][:length])
+
+    global global_stats
+    if scheduler_combination not in global_stats['schedulers']:
+        global_stats['schedulers'][scheduler_combination] = []
+    if experiment_combination not in global_stats['experiments']:
+        global_stats['experiments'][experiment_combination] = []
+
+    global_stats['schedulers'][scheduler_combination].append((
+        (experiment_time_1, experiment_time_2, max_val_accuracy_1, max_val_accuracy_2)
+    ))
+    global_stats['experiments'][experiment_combination].append((
+        (experiment_time_1, experiment_time_2, max_val_accuracy_1, max_val_accuracy_2)
+    ))
+
+
+def write_stats(summary):
+    def gather_stats(data_dict):
+        for scheduler in data_dict:
+            times_1_mean = np.mean([x[0] for x in data_dict[scheduler]])
+            times_1_std = np.std([x[0] for x in data_dict[scheduler]])
+            times_2_mean = np.mean([x[1] for x in data_dict[scheduler]])
+            times_2_std = np.std([x[1] for x in data_dict[scheduler]])
+
+            val_1_mean = np.mean([x[2] for x in data_dict[scheduler]])
+            val_1_std = np.std([x[2] for x in data_dict[scheduler]])
+            val_2_mean = np.mean([x[3] for x in data_dict[scheduler]])
+            val_2_std = np.std([x[3] for x in data_dict[scheduler]])
+
+            data_dict[scheduler] = [
+                (times_1_mean, times_1_std),
+                (times_2_mean, times_2_std),
+                (val_1_mean, val_1_std),
+                (val_2_mean, val_2_std),
+                {
+                    "faster with": (times_2_mean - times_1_mean) / times_2_mean * 100,
+                    "accuracy drop": (val_2_mean - val_1_mean) / val_2_mean * 100
+                }
+            ]
+
+    global global_stats
+    gather_stats(global_stats['schedulers'])
+    gather_stats(global_stats['experiments'])
+    with open(summary, 'w') as fd:
+        json.dump(global_stats, fd, indent=4)
+
+
+def create_tex(group_results, results_dir):
     tex_file = os.path.join(results_dir, 'results_table.txt')
+
     if not os.path.exists(tex_file):
         open(tex_file, 'w').write(
             r'\begin{table}[]''\n'
@@ -174,24 +297,30 @@ def create_tex(group_results, results_dir):
     length = min([x['train_epochs'] for x in group_results])
 
     for result in group_results:
-        scheduler_name = scheduler_acronym[result['scheduler']]
-        experiment_time = round(result['experiment_times'][length - 1] / 3600, 2)
+        scheduler_name = get_scheduler_acronym(result['scheduler'])
+        scheduler_full_name = f"{scheduler_name}({result['scheduler_param'].replace('_', '-')})"
+        experiment_time = result['experiment_times'][length - 1] / 3600
+        max_train_accuracy = max(result['train_accuracies'][:length])
+        max_val_accuracy = max(result['val_accuracies'][:length])
         open(tex_file, 'a').write(
             f"{result['dataset']} & "
-            f"{scheduler_name}({result['scheduler_param'].replace('_', ',')}) & "
+            f"{scheduler_full_name} & "
             f"{result['initial_learning_rate']} & "
             f"{result['initial_batch_size']} & "
-            f"{result['max_train_accuracy']} & "
-            f"{result['max_val_accuracy']} & "
+            f"{max_train_accuracy} & "
+            f"{max_val_accuracy} & "
             f"{experiment_time:.2f}"
             r'\\'
             '\n'
         )
+
     open(tex_file, 'a').write(r'\hline''\n')
 
 
 def create_graphics(group_results, results_dir):
     exp_1, exp_2 = group_results
+    exp_1['scheduler_param'] = transform_scheduler_params(exp_1['scheduler_param'])
+    exp_2['scheduler_param'] = transform_scheduler_params(exp_2['scheduler_param'])
 
     colors = ['darkred', 'royalblue', 'orange']
     with sns.axes_style("whitegrid"):
@@ -212,7 +341,7 @@ def create_graphics(group_results, results_dir):
             return pd.DataFrame.from_dict({
                 'epoch': tuple(range(length)),
                 'Train Acc.': pad_tuple(exp['train_accuracies']),
-                'Val Acc.': pad_tuple(exp['val_accuracies']),
+                'Test Acc.': pad_tuple(exp['val_accuracies']),
                 'Batch Size': pad_tuple(exp['batch_sizes']),
                 'Learning Rate': pad_tuple(exp['learning_rates']),
             })
@@ -231,9 +360,9 @@ def create_graphics(group_results, results_dir):
         sns.move_legend(axes[0], "upper left", bbox_to_anchor=(0.85, 1.2))
 
         # Val
-        sns.lineplot(x="epoch", y="Val Acc.", data=df_1, linewidth='1',
+        sns.lineplot(x="epoch", y="Test Acc.", data=df_1, linewidth='1',
                      color=colors[0], linestyle='-', alpha=0.7, ax=axes[1])
-        sns.lineplot(x="epoch", y="Val Acc.", data=df_2, linewidth='1',
+        sns.lineplot(x="epoch", y="Test Acc.", data=df_2, linewidth='1',
                      color=colors[1], linestyle='-', alpha=0.7, ax=axes[1])
         axes[1].set_ylim(0.0, 1.1)
 
@@ -281,13 +410,15 @@ def main(base_dir, results_dir):
         group_results = [parse_tensorboard(x) for x in group]
         create_tex(group_results, results_dir)
         create_graphics(group_results, results_dir)
+        register_stats(group_results)
+
     open(tex_file, 'a').write(
         r'\end{tabular}''\n'
         r'}''\n'
         r'\end{table}''\n'
     )
 
-    pass
+    write_stats(os.path.join(results_dir, 'summary.json'))
 
 
 if __name__ == '__main__':
