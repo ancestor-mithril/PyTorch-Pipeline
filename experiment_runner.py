@@ -72,7 +72,8 @@ def create_run(dataset, model, optimizer, seed, epochs, es_patience, batch_size,
 def generate_runs():
     datasets = [
         # 'cifar10',
-        'cifar10', 'cifar100'
+        'cifar10', 'cifar100',
+        'FashionMNIST'
     ]
     models = [
         'preresnet18_c10'
@@ -84,14 +85,13 @@ def generate_runs():
         2525
     ]
     epochss = [
-        5
+        200
     ]
     es_patiences = [
         20
     ]
     batch_sizes = [
-        # 10,
-        10, 16, 32
+        16, 32
     ]
     schedulers = [
         # ('IncreaseBSOnPlateau', {'mode': 'min', 'factor': 2.0, 'max_batch_size': max_batch_size}),
@@ -109,11 +109,11 @@ def generate_runs():
         # ('StepLR', {'step_size': 30, 'gamma': 0.2}),
         # ('StepLR', {'step_size': 50, 'gamma': 0.2}),
 
-        # ('ExponentialBS', {'gamma': 1.1, 'max_batch_size': 1000}),
-        # ('ExponentialLR', {'gamma': 0.9}),
+        ('ExponentialBS', {'gamma': 1.01, 'max_batch_size': 1000}),
+        ('ExponentialLR', {'gamma': 0.99}),
 
-        # ('PolynomialBS', {'total_iters':200, 'max_batch_size': 1000}),
-        # ('PolynomialLR', {'total_iters':200}),
+        ('PolynomialBS', {'total_iters':200, 'max_batch_size': 1000}),
+        ('PolynomialLR', {'total_iters':200}),
 
         # ('CosineAnnealingBS', {'total_iters': 200, 'max_batch_size': 1000}),
         # ('CosineAnnealingLR', {'T_max': 200, }),
