@@ -307,8 +307,8 @@ def create_tex(group_results, results_dir):
             f"{scheduler_full_name} & "
             f"{result['initial_learning_rate']} & "
             f"{result['initial_batch_size']} & "
-            f"{max_train_accuracy} & "
-            f"{max_val_accuracy} & "
+            f"{max_train_accuracy:.2f} & "
+            f"{max_val_accuracy:.2f} & "
             f"{experiment_time:.2f}"
             r'\\'
             '\n'
