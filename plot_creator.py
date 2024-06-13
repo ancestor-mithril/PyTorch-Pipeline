@@ -297,6 +297,22 @@ def write_stats(summary):
     gather_stats(global_stats['experiments'])
     with open(summary, 'w') as fd:
         json.dump(global_stats, fd, indent=4)
+    with open(summary.replace('.json', '.txt')) as fd:
+        for scheduler in global_stats['experiments']:
+            (train_1_mean, train_1_std), \
+                (train_2_mean, train_2_std), \
+                (val_1_mean, val_1_std), \
+                (val_2_mean, val_2_std), \
+                (times_1_mean, times_1_std), \
+                (times_2_mean, times_2_std), *_ = global_stats['experiments'][scheduler]
+            fd.write(f'{scheduler.split("--__--")[0]}  '
+                     f'${train_1_mean:.3f} \\pm {train_1_std:.3f}$ & '
+                     f'${val_1_mean:.3f} \\pm {val_1_std:.3f}$ & '
+                     f'${times_1_mean:.3f} \\pm {times_1_std:.3f}$\n')
+            fd.write(f'{scheduler.split("--__--")[1]}  '
+                     f'${train_2_mean:.3f} \\pm {train_2_std:.3f}$ & '
+                     f'${val_2_mean:.3f} \\pm {val_2_std:.3f}$ & '
+                     f'${times_2_mean:.3f} \\pm {times_2_std:.3f}$\n')
 
 
 def create_tex(group_results, results_dir):
