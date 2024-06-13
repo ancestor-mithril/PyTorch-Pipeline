@@ -259,7 +259,7 @@ def register_stats(group_results):
     ))
 
 
-def write_stats(summary):
+def write_stats(summary, tex):
     def gather_stats(data_dict):
         for scheduler in data_dict:
             counts = len(data_dict[scheduler])
@@ -297,7 +297,7 @@ def write_stats(summary):
     gather_stats(global_stats['experiments'])
     with open(summary, 'w') as fd:
         json.dump(global_stats, fd, indent=4)
-    with open(summary.replace('.json', '.txt')) as fd:
+    with open(tex, 'w') as fd:
         for scheduler in global_stats['experiments']:
             (train_1_mean, train_1_std), \
                 (train_2_mean, train_2_std), \
@@ -451,7 +451,7 @@ def main(base_dir, results_dir):
         r'\end{table}''\n'
     )
 
-    write_stats(os.path.join(results_dir, 'summary.json'))
+    write_stats(os.path.join(results_dir, 'summary.json'), os.path.join(results_dir, 'tex.txt'))
 
 
 if __name__ == '__main__':
