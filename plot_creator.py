@@ -58,6 +58,8 @@ def get_match_rules():
 
         ('ExponentialBS', 'gamma_1.1_max_batch_size_1000_'):
             ('ExponentialLR', 'gamma_0.9_'),
+        ('ExponentialBS', 'gamma_1.01_max_batch_size_1000_'):
+            ('ExponentialLR', 'gamma_0.99_'),
         ('ExponentialBS', 'gamma_2_max_batch_size_1000_'):
             ('ExponentialLR', 'gamma_0.5_'),
 
@@ -108,6 +110,8 @@ def transform_scheduler_params(x):
 
         'gamma_1.1_max_batch_size_1000_': '1.1',
         'gamma_0.9_': '0.9',
+        'gamma_1.01_max_batch_size_1000_': '1.01',
+        'gamma_0.99_': '0.99',
         'gamma_2_max_batch_size_1000_': '2',
         'gamma_0.5_': '0.5',
 
@@ -236,6 +240,8 @@ def register_stats(group_results):
     experiment_time_2 = r2['experiment_times'][length - 1] / 3600
     max_val_accuracy_1 = max(r1['val_accuracies'][:length])
     max_val_accuracy_2 = max(r2['val_accuracies'][:length])
+    max_train_accuracy_1 = max(r1['train_accuracies'][:length])
+    max_train_accuracy_2 = max(r2['train_accuracies'][:length])
 
     global global_stats
     if scheduler_combination not in global_stats['schedulers']:
@@ -244,16 +250,19 @@ def register_stats(group_results):
         global_stats['experiments'][experiment_combination] = []
 
     global_stats['schedulers'][scheduler_combination].append((
-        (experiment_time_1, experiment_time_2, max_val_accuracy_1, max_val_accuracy_2)
+        (experiment_time_1, experiment_time_2, max_val_accuracy_1, max_val_accuracy_2, max_train_accuracy_1,
+         max_train_accuracy_2)
     ))
     global_stats['experiments'][experiment_combination].append((
-        (experiment_time_1, experiment_time_2, max_val_accuracy_1, max_val_accuracy_2)
+        (experiment_time_1, experiment_time_2, max_val_accuracy_1, max_val_accuracy_2, max_train_accuracy_1,
+         max_train_accuracy_2)
     ))
 
 
 def write_stats(summary):
     def gather_stats(data_dict):
         for scheduler in data_dict:
+            counts = len(data_dict[scheduler])
             times_1_mean = np.mean([x[0] for x in data_dict[scheduler]])
             times_1_std = np.std([x[0] for x in data_dict[scheduler]])
             times_2_mean = np.mean([x[1] for x in data_dict[scheduler]])
@@ -264,14 +273,22 @@ def write_stats(summary):
             val_2_mean = np.mean([x[3] for x in data_dict[scheduler]])
             val_2_std = np.std([x[3] for x in data_dict[scheduler]])
 
+            train_1_mean = np.mean([x[4] for x in data_dict[scheduler]])
+            train_1_std = np.std([x[4] for x in data_dict[scheduler]])
+            train_2_mean = np.mean([x[5] for x in data_dict[scheduler]])
+            train_2_std = np.std([x[5] for x in data_dict[scheduler]])
+
             data_dict[scheduler] = [
-                (times_1_mean, times_1_std),
-                (times_2_mean, times_2_std),
+                (train_1_mean, train_1_std),
+                (train_2_mean, train_2_std),
                 (val_1_mean, val_1_std),
                 (val_2_mean, val_2_std),
+                (times_1_mean, times_1_std),
+                (times_2_mean, times_2_std),
                 {
                     "faster with": (times_2_mean - times_1_mean) / times_2_mean * 100,
-                    "accuracy drop": (val_2_mean - val_1_mean) / val_2_mean * 100
+                    "accuracy drop": (val_2_mean - val_1_mean) / val_2_mean * 100,
+                    "counts": counts,
                 }
             ]
 
