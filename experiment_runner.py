@@ -55,6 +55,7 @@ def create_run(dataset, model, optimizer, seed, epochs, es_patience, batch_size,
         f" -lr 0.001"
         f" -bs {batch_size}"
         f" -epochs {epochs}"
+        f" -es_patience {es_patience}"
         f" -dataset {dataset}"
         f" -data_path ../data"
         f" -scheduler {scheduler_name}"
