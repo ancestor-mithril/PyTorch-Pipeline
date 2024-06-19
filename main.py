@@ -15,6 +15,7 @@ if __name__ == '__main__':
     parser.add_argument('-lr', default=0.001, type=float, help='learning rate')
     parser.add_argument('-bs', default=10, type=int, help='batch size')
     parser.add_argument('-epochs', default=200, type=int, help='train epochs')
+    parser.add_argument('-es_patience', default=20, type=int, help='early stopping patience')
     parser.add_argument('-dataset', default='cifar10', type=str, help='dataset')
     parser.add_argument('-data_path', default='../data', type=str, help='path to dataset')
     parser.add_argument('-scheduler', default='ReduceLROnPlateau', type=str, help='scheduler')
