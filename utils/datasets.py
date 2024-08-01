@@ -23,14 +23,15 @@ class CIFAR100_noisy_fine(Dataset):
         data, targets = tuple(zip(*cifar100))
 
         if train:
-            noisy_label_file = os.path.join(root, 'CIFAR-100_human.pt')
+            noisy_label_file = os.path.join(root, 'CIFAR-100-noisy.npz')
             if not os.path.isfile(noisy_label_file):
                 if not download:
                     raise FileNotFoundError(f"{type(self).__name__} need {noisy_label_file} to be used!")
-                download_noisy_labels('https://github.com/UCSC-REAL/cifar-10-100n/raw/main/data/CIFAR-100_human.pt',
+                download_noisy_labels('https://github.com/ancestor-mithril/PyTorch-Pipeline'
+                                      '/raw/master/data-repository/CIFAR-100-noisy.npz',
                                       noisy_label_file)
 
-            noise_file = torch.load(noisy_label_file)
+            noise_file = np.load(noisy_label_file)
             if not np.array_equal(noise_file['clean_label'], targets):
                 raise RuntimeError("Clean labels do not match!")
             targets = noise_file['noisy_label']
