@@ -15,7 +15,7 @@ class LossIQR(Module):
     def forward(self, outputs, targets):
         loss = self.loss(outputs, targets)
         # IQR = Q3 - Q1. We eliminate only loss values above Q3 + 1.5 IQR = 2.5 Q3 - 1.5 Q1
-        with torch.no_grad():
+        with torch.no_grad():  # TODO: Maybe use to cpu
             mask = loss < (torch.quantile(loss, self.quantiles) * self.weights).sum()
 
         return loss[mask].mean()
