@@ -3,7 +3,6 @@ from urllib.request import urlretrieve
 from typing import Optional, Callable
 
 import numpy as np
-import torch
 from torch.utils.data import Dataset
 from torchvision.datasets import CIFAR100
 
