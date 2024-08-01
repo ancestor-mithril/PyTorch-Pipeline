@@ -2,7 +2,9 @@ torch
 tensorboard
 torchvision
 bs_scheduler
-timed-decorator>=1.3.0
+timed-decorator
 tqdm
-argparse
 numpy
+matplotlib
+seaborn
+pandas

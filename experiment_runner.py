@@ -113,8 +113,8 @@ def generate_runs():
         ('ExponentialBS', {'gamma': 1.01, 'max_batch_size': 1000}),
         ('ExponentialLR', {'gamma': 0.99}),
 
-        ('PolynomialBS', {'total_iters':200, 'max_batch_size': 1000}),
-        ('PolynomialLR', {'total_iters':200}),
+        ('PolynomialBS', {'total_iters': 200, 'max_batch_size': 1000}),
+        ('PolynomialLR', {'total_iters': 200}),
 
         # ('CosineAnnealingBS', {'total_iters': 200, 'max_batch_size': 1000}),
         # ('CosineAnnealingLR', {'T_max': 200, }),
