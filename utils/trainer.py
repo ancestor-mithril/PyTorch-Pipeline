@@ -71,6 +71,10 @@ class Trainer:
         params.pop('half')
         params.pop('num_threads')
 
+        # removed for no info, add again if needed
+        params.pop('criterion')
+        params.pop('reduction')
+
         no_keys = [
             'dataset',
             'scheduler'

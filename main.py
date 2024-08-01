@@ -22,6 +22,8 @@ if __name__ == '__main__':
     parser.add_argument('-scheduler_params', default='{"mode":"min", "factor":0.5}', type=str,
                         help='scheduler_params')
     parser.add_argument('-model', default='preresnet18_c10', type=str, help='model')
+    parser.add_argument('-criterion', default='crossentropy', type=str, help='loss')
+    parser.add_argument('-reduction', default='mean', type=str, help='loss reduction. Can be mean, iqr.')
     parser.add_argument('-fill', default=None, type=float, help='fill value for transformations')
     parser.add_argument('-num_threads', default=None, type=int, help='default number of threads used by pytorch')
     parser.add_argument('-seed', default=3, type=int, help='seed')
