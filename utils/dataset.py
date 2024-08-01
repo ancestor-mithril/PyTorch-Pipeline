@@ -3,6 +3,7 @@ from functools import partial
 from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets import CIFAR10, CIFAR100, FashionMNIST
 
+from .datasets import CIFAR100_noisy_fine
 from .transforms import init_transforms
 
 
@@ -35,6 +36,12 @@ def init_dataset(args):
         num_classes = 10
     elif args.dataset == 'cifar100':
         dataset_fn = partial(CIFAR100, root=args.data_path, download=True)
+        num_classes = 100
+    elif args.dataset == 'cifar100noisy':
+        # Learning with Noisy Labels Revisited: A Study Using Real-World Human Annotations
+        # https://github.com/UCSC-REAL/cifar-10-100n
+        # https://www.noisylabels.com/
+        dataset_fn = partial(CIFAR100_noisy_fine, root=args.data_path, download=True)
         num_classes = 100
     elif args.dataset == 'FashionMNIST':
         dataset_fn = partial(FashionMNIST, root=args.data_path, download=True)

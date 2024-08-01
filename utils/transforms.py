@@ -58,6 +58,6 @@ class CifarTransforms(DatasetTransforms):
 
 
 def init_transforms(args) -> DatasetTransforms:
-    if args.dataset in ('cifar10', 'cifar100', 'FashionMNIST'):
+    if args.dataset in ('cifar10', 'cifar100', 'FashionMNIST', 'cifar100noisy'):
         return CifarTransforms(args)
     raise NotImplementedError(f"Transforms not implemented for {args.dataset}")
