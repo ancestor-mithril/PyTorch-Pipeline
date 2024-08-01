@@ -38,7 +38,7 @@ class Trainer:
         self.model = init_model(args, self.train_dataset.num_classes).to(self.device)
         self.model = torch.jit.script(self.model)
 
-        self.criterion = init_criterion(args)
+        self.criterion = init_criterion(args).to(self.device)
         self.optimizer = init_optimizer(args, self.model.parameters())
 
         self.scheduler = init_scheduler(args, self.optimizer, self.train_loader)
