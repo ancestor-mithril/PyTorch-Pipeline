@@ -73,13 +73,13 @@ class Trainer:
 
         # removed for no info, add again if needed
         params.pop('criterion')
-        params.pop('reduction')
 
         no_keys = [
             'dataset',
-            'scheduler'
-            'scheduler_params'
-            'model'
+            'scheduler',
+            'scheduler_params',
+            'model',
+            'reduction'
         ]
 
         params = [f'{k}_{v}' if k not in no_keys else f'{v}' for k, v in params.items()]
