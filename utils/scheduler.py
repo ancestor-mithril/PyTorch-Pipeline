@@ -25,7 +25,7 @@ def init_scheduler(args, optimizer: Optimizer, train_loader: DataLoader):  # noq
         assert 'max_batch_size' in args.scheduler_params
         scheduler = StepBS(train_loader, **args.scheduler_params)
     elif args.scheduler == 'StepLR':
-        # "{'step_size':30, 'gamma': 2.0}"
+        # "{'step_size':30, 'gamma': 0.5}"
 
         assert 'step_size' in args.scheduler_params
         scheduler = StepLR(optimizer, **args.scheduler_params)
