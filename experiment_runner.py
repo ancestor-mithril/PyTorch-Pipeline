@@ -46,17 +46,18 @@ def run_command(command_idx):
             fp.write(command + '\n')
 
 
-def create_run(dataset, model, optimizer, seed, epochs, es_patience, batch_size, scheduler_params):
+def create_run(dataset, model, optimizer, seed, epochs, es_patience, batch_size, scheduler_params, lr, reduction):
     scheduler_name, scheduler_params = scheduler_params
     scheduler_params = str(scheduler_params).replace(" ", "")
     scheduler_params = str(scheduler_params).replace('"', '\'')
     scheduler_params = '"' + scheduler_params + '"'
     return (
-        f" -lr 0.001"
+        f" -lr {lr}"
         f" -bs {batch_size}"
         f" -epochs {epochs}"
         f" -es_patience {es_patience}"
         f" -dataset {dataset}"
+        f" -reduction {reduction}"
         f" -data_path ../data"
         f" -scheduler {scheduler_name}"
         f" -scheduler_params {scheduler_params}"
@@ -94,6 +95,12 @@ def generate_runs():
     batch_sizes = [
         16, 32
     ]
+    lrs = [
+        0.001
+    ]
+    reductions = [
+        'mean'
+    ]
     schedulers = [
         # ('IncreaseBSOnPlateau', {'mode': 'min', 'factor': 2.0, 'max_batch_size': max_batch_size}),
         # ('IncreaseBSOnPlateau', {'mode': 'min', 'factor': 5.0, 'max_batch_size': max_batch_size}),
@@ -130,10 +137,12 @@ def generate_runs():
     ]
 
     runs = []
-    for dataset, model, optimizer, seed, epochs, es_patience, batch_size, scheduler_params in \
-            itertools.product(datasets, models, optimizers, seeds, epochss, es_patiences, batch_sizes, schedulers):
+    for dataset, model, optimizer, seed, epochs, es_patience, batch_size, scheduler_params, lr, reduction in \
+            itertools.product(datasets, models, optimizers, seeds, epochss, es_patiences, batch_sizes, schedulers, lrs,
+                              reductions):
         run = create_run(dataset=dataset, model=model, optimizer=optimizer, seed=seed, epochs=epochs,
-                         es_patience=es_patience, batch_size=batch_size, scheduler_params=scheduler_params)
+                         es_patience=es_patience, batch_size=batch_size, scheduler_params=scheduler_params, lr=lr,
+                         reduction=reduction)
         runs.append(run)
 
     return [f"python main.py {i}" for i in runs]
