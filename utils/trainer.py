@@ -74,7 +74,7 @@ class Trainer:
         # removed for no info, add again if needed
         params.pop('criterion')
 
-        # TODO: Adding scheduler and scheduler params means changing plot creator script
+        # FIXME: Adding scheduler and scheduler params means changing plot creator script
         no_keys = [
             'dataset',
             # 'scheduler',
@@ -215,6 +215,11 @@ class Trainer:
         train_acc = round(metrics["Train/Accuracy"], 2)
         val_acc = round(metrics["Val/Accuracy"], 2)
         best = round(self.best_metric, 2)
+        # DEBUG
+        if hasattr(self.criterion, 'progress_tracker'):
+            progress = round(torch.mean(torch.Tensor(self.criterion.progress_tracker)).item(), 2)
+            self.criterion.progress_tracker = []
+            return f'Train: {train_acc}, Val: {val_acc}, Best: {best}, Progress: {progress}'
         return f'Train: {train_acc}, Val: {val_acc}, Best: {best}'
 
     def early_stopping(self, metrics):
