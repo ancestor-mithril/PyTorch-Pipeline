@@ -74,10 +74,11 @@ class Trainer:
         # removed for no info, add again if needed
         params.pop('criterion')
 
+        # TODO: Adding scheduler and scheduler params means changing plot creator script
         no_keys = [
             'dataset',
-            'scheduler',
-            'scheduler_params',
+            # 'scheduler',
+            # 'scheduler_params',
             'model',
             'reduction'
         ]
