@@ -110,7 +110,7 @@ class Trainer:
 
                     self.post_epoch(metrics)
                     self.write_metrics(epoch, metrics, total_training_time)
-                    tbar.set_description(self.epoch_description(metrics))
+                    self.update_tbar(tbar, metrics)
                     if self.early_stopping(metrics):
                         break
         except KeyboardInterrupt:
@@ -225,3 +225,10 @@ class Trainer:
     def early_stopping(self, metrics):
         es_metric = metrics[self.es_metric]
         return self.early_stopper.step(es_metric)
+
+    def update_tbar(self, tbar, metrics):
+        description = self.epoch_description(metrics)
+        if self.args.disable_progress_bar:
+            print(description)
+        else:
+            tbar.set_description(description)
