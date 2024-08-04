@@ -231,6 +231,7 @@ class Trainer:
         description = self.epoch_description(metrics)
         if self.args.disable_progress_bar:
             if self.args.verbose:
+                # TODO: Create a logger that writes to file. If verbose, also writes to console
                 print(description)
         else:
             tbar.set_description(description)
