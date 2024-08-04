@@ -12,20 +12,26 @@ from tqdm import tqdm
 
 from models import init_model
 from utils.dataset import init_dataset, init_loaders
+from utils.early_stopping import init_early_stopping
+from utils.logger import init_logger
 from utils.loss import init_criterion
 from utils.optimizer import init_optimizer
 from utils.scheduler import init_scheduler
-from utils.early_stopping import init_early_stopping
 from utils.utils import seed_everything
 
 
 class Trainer:
     def __init__(self, args):
         self.args = args
+
+        self.logdir = self.init_logdir()
+        self.logger = init_logger(self.logdir, args.verbose)
+        self.logger.info(str(args))
+
         seed_everything(args.seed)
 
         self.device = torch.device(args.device)
-        print(f'Using {self.device}')
+        self.logger.info(f'Using {self.device}')
 
         pin_memory = False
         if self.device.type == 'cuda':
@@ -44,8 +50,7 @@ class Trainer:
         self.scheduler = init_scheduler(args, self.optimizer, self.train_loader)
         self.early_stopper = init_early_stopping(args)
 
-        self.logdir = self.init_logdir()
-        self.writer = SummaryWriter(log_dir=f'runs/{self.logdir}')
+        self.writer = SummaryWriter(log_dir=self.logdir)
         self.best_metric = 0.0
 
     @cached_property
@@ -89,7 +94,7 @@ class Trainer:
         params = [re.sub('_+', '_', x) for x in params]
 
         now = datetime.now()
-        logdir = os.path.join(now.strftime('%y-%m-%d'), now.strftime('%H-%M-%S'), *params)
+        logdir = os.path.join('runs', now.strftime('%y-%m-%d'), now.strftime('%H-%M-%S'), *params)
         return logdir
 
     def get_lr(self):
@@ -118,7 +123,7 @@ class Trainer:
             pass
         with open("results.txt", "a") as f:
             f.write(f'{self.logdir} -> {self.best_metric}\n')
-        print("Best:", self.best_metric)
+        self.logger.info(f"Best: {self.best_metric}")
 
     @timed(stdout=False, return_time=True)
     def train(self):
@@ -229,9 +234,6 @@ class Trainer:
 
     def update_tbar(self, tbar, metrics):
         description = self.epoch_description(metrics)
-        if self.args.disable_progress_bar:
-            if self.args.verbose:
-                # TODO: Create a logger that writes to file. If verbose, also writes to console
-                print(description)
-        else:
+        self.logger.info(description)
+        if not self.args.disable_progress_bar:
             tbar.set_description(description)

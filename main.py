@@ -41,7 +41,6 @@ if __name__ == '__main__':
         args.num_threads = multiprocessing.cpu_count() // 2  # use half the available threads
     torch.set_num_threads(args.num_threads)
 
-    print(args)
     Trainer(args).run()
 
 # PYTHONOPTIMIZE=2 python main.py -device cuda:0 -lr 0.001 -bs 16 -epochs 200 -dataset cifar10 -data_path ../data -scheduler ReduceLROnPlateau -scheduler_params "{'mode':'min', 'factor':0.5}" -model preresnet18_c10 -fill 0.5 --cutout --autoaug --tta --half # noqa: E501

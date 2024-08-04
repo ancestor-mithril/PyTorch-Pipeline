@@ -1,3 +1,4 @@
+import logging
 import os.path
 from urllib.request import urlretrieve
 from typing import Optional, Callable
@@ -8,7 +9,7 @@ from torchvision.datasets import CIFAR100
 
 
 def download_noisy_labels(url: str, file_path: str):
-    print(f"Downloading {file_path} from {url}")
+    logging.getLogger("Pipeline").info(f"Downloading {file_path} from {url}")
     urlretrieve(url, file_path)
 
 
