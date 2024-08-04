@@ -68,6 +68,7 @@ class Trainer:
         params.pop('device')
         params.pop('data_path')
         params.pop('disable_progress_bar')
+        params.pop('verbose')
         params.pop('half')
         params.pop('num_threads')
 
@@ -229,6 +230,7 @@ class Trainer:
     def update_tbar(self, tbar, metrics):
         description = self.epoch_description(metrics)
         if self.args.disable_progress_bar:
-            print(description)
+            if self.args.verbose:
+                print(description)
         else:
             tbar.set_description(description)
