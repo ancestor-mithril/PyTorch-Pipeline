@@ -1,8 +1,8 @@
 from bs_scheduler import IncreaseBSOnPlateau, StepBS, ExponentialBS, PolynomialBS, CosineAnnealingBS, \
-    CosineAnnealingBSWithWarmRestarts, CyclicBS, OneCycleBS
+    CosineAnnealingBSWithWarmRestarts, CyclicBS, OneCycleBS, LinearBS
 from torch.optim import Optimizer
 from torch.optim.lr_scheduler import ReduceLROnPlateau, StepLR, ExponentialLR, PolynomialLR, CosineAnnealingLR, \
-    CosineAnnealingWarmRestarts, CyclicLR, OneCycleLR
+    CosineAnnealingWarmRestarts, CyclicLR, OneCycleLR, LinearLR
 from torch.utils.data import DataLoader
 
 
@@ -118,6 +118,22 @@ def init_scheduler(args, optimizer: Optimizer, train_loader: DataLoader):  # noq
         assert 'total_steps' in args.scheduler_params
         assert 'max_lr' in args.scheduler_params
         scheduler = OneCycleLR(optimizer, **args.scheduler_params)
+
+    elif args.scheduler == 'LinearLR':
+        # "{'total_iters':200, 'start_factor': 1.0, 'end_factor': 0.03333}"
+
+        assert 'total_iters' in args.scheduler_params
+        assert 'start_factor' in args.scheduler_params
+        assert 'end_factor' in args.scheduler_params
+        scheduler = LinearLR(optimizer, **args.scheduler_params)
+
+    elif args.scheduler == 'LinearBS':
+        # "{'milestone':200, 'start_factor': 1.0, 'end_factor': 30.0}"
+
+        assert 'milestone' in args.scheduler_params
+        assert 'start_factor' in args.scheduler_params
+        assert 'end_factor' in args.scheduler_params
+        scheduler = LinearBS(train_loader, **args.scheduler_params)
     else:
         raise NotImplementedError(f'Scheduler {args.scheduler} not implemented')
     return scheduler
