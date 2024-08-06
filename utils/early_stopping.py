@@ -1,38 +1,23 @@
 import numpy as np
 
 
-def init_is_better(mode: str, min_delta: float, percentage: bool) -> callable:
-    if mode not in {'min', 'max'}:
-        raise ValueError('mode ' + mode + ' is unknown!')
-    if not percentage:
-        if mode == 'min':
-            is_better = lambda a, best: a < best - min_delta
-        if mode == 'max':
-            is_better = lambda a, best: a > best + min_delta
-    else:
-        if mode == 'min':
-            multiplier = 1 - min_delta / 100
-            is_better = lambda a, best: a < best * multiplier
-        if mode == 'max':
-            multiplier = 1 + min_delta / 100
-            is_better = lambda a, best: a > best * multiplier
-
-    return is_better
-
-
 class EarlyStopping:
     def __init__(self, mode='min', min_delta=0.0, patience=10, percentage=False):
-        # TODO: Replace with library one, or add logging
+        self.is_better = None
         self.mode = mode
         self.min_delta = min_delta
         self.patience = patience
         self.best = None
         self.num_bad_epochs = 0
-        self.is_better = init_is_better(mode, min_delta, percentage)
 
         if patience == 0:
-            self.is_better = lambda a, b: True
-            self.step = lambda a: False
+            self.step = self.fake_step
+        else:
+            self.init_is_better(mode, percentage)
+
+    @staticmethod
+    def fake_step(metrics):
+        return False
 
     def step(self, metrics):
         if self.best is None:
@@ -51,6 +36,34 @@ class EarlyStopping:
         if self.num_bad_epochs >= self.patience:
             return True
         return False
+
+    def init_is_better(self, mode: str, percentage: bool) -> callable:
+        if mode not in ('min', 'max'):
+            raise ValueError('mode ' + mode + ' is unknown!')
+        if not percentage:
+            if mode == 'min':
+                self.is_better = self.relative_min
+            if mode == 'max':
+                self.is_better = self.relative_max
+        else:
+            if mode == 'min':
+                self.min_delta = 1 - self.min_delta / 100
+                self.is_better = self.absolute_min
+            if mode == 'max':
+                self.min_delta = 1 + self.min_delta / 100
+                self.is_better = self.absolute_max
+
+    def absolute_min(self, x: float, best: float) -> bool:
+        return x < best - self.min_delta
+
+    def absolute_max(self, x: float, best: float) -> bool:
+        return x > best - self.min_delta
+
+    def relative_min(self, x: float, best: float) -> bool:
+        return x < best * self.min_delta
+
+    def relative_max(self, x: float, best: float) -> bool:
+        return x > best * self.min_delta
 
 
 def init_early_stopping(args):
