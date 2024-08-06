@@ -26,12 +26,12 @@ class Trainer:
 
         self.logdir = self.init_logdir()
         self.logger = init_logger(self.logdir, args.verbose)
-        self.logger.info(str(args))
+        self.logger.log(args)
 
         seed_everything(args.seed)
 
         self.device = torch.device(args.device)
-        self.logger.info(f'Using {self.device}')
+        self.logger.log(f'Using {self.device}')
 
         pin_memory = False
         if self.device.type == 'cuda':
@@ -123,7 +123,7 @@ class Trainer:
             pass
         with open("results.txt", "a") as f:
             f.write(f'{self.logdir} -> {self.best_metric}\n')
-        self.logger.info(f"Best: {self.best_metric}")
+        self.logger.log(f"Best: {self.best_metric}")
 
     @timed(stdout=False, return_time=True)
     def train(self):
@@ -234,6 +234,6 @@ class Trainer:
 
     def update_tbar(self, tbar, metrics):
         description = self.epoch_description(metrics)
-        self.logger.info(description)
+        self.logger.log(description, to_console=self.args.disable_progress_bar)
         if not self.args.disable_progress_bar:
             tbar.set_description(description)
