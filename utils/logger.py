@@ -14,18 +14,17 @@ class Logger:
         file_logger.addHandler(file_handler)
         self.file_logger = file_logger
 
-        self.console_logger = None
-        if verbose:
-            console_logger = logging.getLogger("Pipeline.console")
-            console_logger.setLevel(logging.INFO)
-            stream_handler = logging.StreamHandler(sys.stdout)
-            console_logger.addHandler(stream_handler)
-            self.console_logger = console_logger
+        console_logger = logging.getLogger("Pipeline.console")
+        console_logger.setLevel(logging.INFO)
+        stream_handler = logging.StreamHandler(sys.stdout)
+        console_logger.addHandler(stream_handler)
+        self.console_logger = console_logger
+        self.verbose = verbose
 
-    def log(self, *args, to_console: bool = True):
+    def log(self, *args, to_console: bool = True, force_console: bool = False):
         string = ' '.join(map(str, args))
         self.file_logger.info(string)
-        if self.console_logger is not None and to_console:
+        if self.verbose and to_console or force_console:
             self.console_logger.info(string)
 
 
