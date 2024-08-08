@@ -27,7 +27,7 @@ class EarlyStopping:
             return False
 
         if np.isnan(metrics):
-            get_logger().warn(f"None encountered in metrics. Early stopping activated.")
+            get_logger().warning(f"None encountered in metrics. Early stopping activated.")
             return True
 
         if self.is_better(metrics, self.best):

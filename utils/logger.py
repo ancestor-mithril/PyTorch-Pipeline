@@ -1,8 +1,9 @@
 import logging
 import os
 import sys
+from typing import Optional
 
-logger = None
+logger: Optional["Logger"] = None
 
 
 class Logger:
@@ -27,6 +28,11 @@ class Logger:
         if self.verbose and to_console or force_console:
             self.console_logger.info(string)
 
+    def warning(self, *args):
+        string = ' '.join(map(str, args))
+        self.file_logger.warning(string)
+        self.console_logger.warning(string)
+
 
 def init_logger(logdir: str, verbose: bool) -> Logger:
     global logger
@@ -34,7 +40,7 @@ def init_logger(logdir: str, verbose: bool) -> Logger:
     return logger
 
 
-def get_logger() -> logger:
+def get_logger() -> Logger:
     global logger
     if logger is None:
         raise RuntimeError("Logger must be initialized")
