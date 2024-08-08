@@ -25,6 +25,7 @@ class DatasetTransforms(ABC):
 class MNISTTransforms(DatasetTransforms):
     def __init__(self, args):
         self.args = args
+        self.normalize = v2.Normalize((0.1307,), (0.3081,))
 
     def train_cached(self):
         return v2.Compose([
@@ -36,12 +37,12 @@ class MNISTTransforms(DatasetTransforms):
             v2.RandomHorizontalFlip(),
             v2.RandomAffine(degrees=20, translate=(0.1, 0.1), scale=(0.9, 1.1)),
             v2.ColorJitter(brightness=0.2, contrast=0.2),
-            v2.Normalize((0.1307,), (0.3081,))
+            self.normalize
         ])
 
     def test_cached(self):
         return v2.Compose([
-            v2.ToImage(), v2.ToDtype(torch.float32, scale=True), v2.Normalize((0.1307,), (0.3081,))
+            v2.ToImage(), v2.ToDtype(torch.float32, scale=True), self.normalize
         ])
 
     def test_runtime(self):
@@ -51,6 +52,7 @@ class MNISTTransforms(DatasetTransforms):
 class CifarTransforms(DatasetTransforms):
     def __init__(self, args):
         self.args = args
+        self.normalize = v2.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
 
     def train_cached(self):
         return v2.Compose([
@@ -69,14 +71,13 @@ class CifarTransforms(DatasetTransforms):
             fill_value = 0 if self.args.fill is None else self.args.fill
             transforms.append(v2.RandomErasing(scale=(0.05, 0.15), value=fill_value, inplace=True))
 
-        transforms.append(v2.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)))
+        transforms.append(self.normalize)
         transforms = v2.Compose(transforms)
         return transforms
 
     def test_cached(self):
         return v2.Compose([
-            v2.ToImage(), v2.ToDtype(torch.float32, scale=True),
-            v2.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010)),
+            v2.ToImage(), v2.ToDtype(torch.float32, scale=True), self.normalize,
         ])
 
     def test_runtime(self):
@@ -86,6 +87,6 @@ class CifarTransforms(DatasetTransforms):
 def init_transforms(args) -> DatasetTransforms:
     if args.dataset in ('cifar10', 'cifar100', 'FashionMNIST', 'cifar100noisy'):
         return CifarTransforms(args)
-    if args.dataset in ('mnist', 'DirtyMNIST'):
+    if args.dataset in ('MNIST', 'DirtyMNIST'):
         return MNISTTransforms(args)
     raise NotImplementedError(f"Transforms not implemented for {args.dataset}")
