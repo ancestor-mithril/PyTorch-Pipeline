@@ -30,14 +30,12 @@ class EarlyStopping:
             get_logger().warning("None encountered in metrics. Early stopping activated.")
             return True
 
-        print("Metrics:", metrics, self.best)
         if self.is_better(metrics, self.best):
             self.num_bad_epochs = 0
             self.best = metrics
         else:
             self.num_bad_epochs += 1
 
-        print(self.num_bad_epochs, self.patience)
         if self.num_bad_epochs >= self.patience:
             return True
         return False
@@ -47,16 +45,16 @@ class EarlyStopping:
             raise ValueError('mode ' + mode + ' is unknown!')
         if not percentage:
             if mode == 'min':
-                self.is_better = self.relative_min
+                self.is_better = self.absolute_min
             if mode == 'max':
-                self.is_better = self.relative_max
+                self.is_better = self.absolute_max
         else:
             if mode == 'min':
                 self.min_delta = 1 - self.min_delta / 100
-                self.is_better = self.absolute_min
+                self.is_better = self.relative_min
             if mode == 'max':
                 self.min_delta = 1 + self.min_delta / 100
-                self.is_better = self.absolute_max
+                self.is_better = self.relative_max
 
     def absolute_min(self, x: float, best: float) -> bool:
         return x < best - self.min_delta
