@@ -1,5 +1,7 @@
 import numpy as np
 
+from utils.logger import get_logger
+
 
 class EarlyStopping:
     def __init__(self, mode='min', min_delta=0.0, patience=10, percentage=False):
@@ -25,6 +27,7 @@ class EarlyStopping:
             return False
 
         if np.isnan(metrics):
+            get_logger().warn(f"None encountered in metrics. Early stopping activated.")
             return True
 
         if self.is_better(metrics, self.best):
