@@ -19,8 +19,7 @@ if __name__ == '__main__':
     parser.add_argument('-dataset', default='cifar10', type=str, help='dataset')
     parser.add_argument('-data_path', default='../data', type=str, help='path to dataset')
     parser.add_argument('-scheduler', default='ReduceLROnPlateau', type=str, help='scheduler')
-    parser.add_argument('-scheduler_params', default='{"mode":"min", "factor":0.5}', type=str,
-                        help='scheduler_params')
+    parser.add_argument('-scheduler_params', default='', type=str, help='scheduler_params')
     parser.add_argument('-model', default='preresnet18_c10', type=str, help='model')
     parser.add_argument('-criterion', default='crossentropy', type=str, help='loss')
     parser.add_argument('-reduction', default='mean', type=str, help='loss reduction. Can be mean, iqr, stdmean.')
