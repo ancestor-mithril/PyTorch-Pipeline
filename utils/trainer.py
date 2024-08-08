@@ -26,12 +26,12 @@ class Trainer:
 
         self.logdir = self.init_logdir()
         self.logger = init_logger(self.logdir, args.verbose)
-        self.logger.log(args, force_console=True)
+        self.logger.log_both(args)
 
         seed_everything(args.seed)
 
         self.device = torch.device(args.device)
-        self.logger.log(f'Using {self.device}', force_console=True)
+        self.logger.log_both(f'Using {self.device}')
 
         pin_memory = False
         if self.device.type == 'cuda':
@@ -118,13 +118,13 @@ class Trainer:
                     self.write_metrics(epoch, metrics, total_training_time)
                     self.update_tbar(tbar, metrics)
                     if self.early_stopping(metrics):
-                        self.logger.log("Early stopping", force_console=True)
+                        self.logger.log_both("Early stopping")
                         break
         except KeyboardInterrupt:
             pass
         with open("results.txt", "a") as f:
             f.write(f'{self.logdir} -> {self.best_metric}\n')
-        self.logger.log(f"Best: {self.best_metric}, after {epoch} epochs", force_console=True)
+        self.logger.log_both(f"Best: {self.best_metric}, after {epoch} epochs")
 
     @timed(stdout=False, return_time=True)
     def train(self):

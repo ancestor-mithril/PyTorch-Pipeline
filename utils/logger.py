@@ -22,16 +22,16 @@ class Logger:
         self.console_logger = console_logger
         self.verbose = verbose
 
-    def log(self, *args, to_console: bool = True, force_console: bool = False):
+    def log(self, *args, to_console: bool = True):
         string = ' '.join(map(str, args))
         self.file_logger.info(string)
-        if self.verbose and to_console or force_console:
+        if self.verbose and to_console:
             self.console_logger.info(string)
 
-    def warning(self, *args):
+    def log_both(self, *args):
         string = ' '.join(map(str, args))
-        self.file_logger.warning(string)
-        self.console_logger.warning(string)
+        self.file_logger.info(string)
+        self.console_logger.info(string)
 
 
 def init_logger(logdir: str, verbose: bool) -> Logger:
