@@ -124,7 +124,7 @@ class Trainer:
             pass
         with open("results.txt", "a") as f:
             f.write(f'{self.logdir} -> {self.best_metric}\n')
-        self.logger.log(f"Best: {self.best_metric}", force_console=True)
+        self.logger.log(f"Best: {self.best_metric}, after {epoch} epochs", force_console=True)
 
     @timed(stdout=False, return_time=True)
     def train(self):
