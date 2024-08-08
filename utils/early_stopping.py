@@ -27,15 +27,17 @@ class EarlyStopping:
             return False
 
         if np.isnan(metrics):
-            get_logger().warning(f"None encountered in metrics. Early stopping activated.")
+            get_logger().warning("None encountered in metrics. Early stopping activated.")
             return True
 
+        print("Metrics:", metrics, self.best)
         if self.is_better(metrics, self.best):
             self.num_bad_epochs = 0
             self.best = metrics
         else:
             self.num_bad_epochs += 1
 
+        print(self.num_bad_epochs, self.patience)
         if self.num_bad_epochs >= self.patience:
             return True
         return False
@@ -60,7 +62,7 @@ class EarlyStopping:
         return x < best - self.min_delta
 
     def absolute_max(self, x: float, best: float) -> bool:
-        return x > best - self.min_delta
+        return x > best + self.min_delta
 
     def relative_min(self, x: float, best: float) -> bool:
         return x < best * self.min_delta
@@ -69,6 +71,5 @@ class EarlyStopping:
         return x > best * self.min_delta
 
 
-def init_early_stopping(args):
-    es_patience = 20 if not hasattr(args, 'es_patience') else args.es_patience
-    return EarlyStopping(mode='min', min_delta=0.0, patience=es_patience)
+def init_early_stopping(args) -> EarlyStopping:
+    return EarlyStopping(mode='min', min_delta=0.0, patience=args.es_patience)
