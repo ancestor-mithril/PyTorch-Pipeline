@@ -8,3 +8,4 @@ numpy
 matplotlib
 seaborn
 pandas
+ddu_dirty_mnist  # Optional: For DirtyMNIST

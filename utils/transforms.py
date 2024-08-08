@@ -22,6 +22,25 @@ class DatasetTransforms(ABC):
         pass
 
 
+class MNISTTransforms(DatasetTransforms):
+    def __init__(self, args):
+        self.args = args
+
+    def train_cached(self):
+        return v2.Compose([
+            v2.ToImage(), v2.ToDtype(torch.float32, scale=True), v2.Normalize((0.1307,), (0.3081,))
+        ])
+
+    def train_runtime(self):
+        return None
+
+    def test_cached(self):
+        return self.train_cached()
+
+    def test_runtime(self):
+        return None
+
+
 class CifarTransforms(DatasetTransforms):
     def __init__(self, args):
         self.args = args
@@ -60,4 +79,6 @@ class CifarTransforms(DatasetTransforms):
 def init_transforms(args) -> DatasetTransforms:
     if args.dataset in ('cifar10', 'cifar100', 'FashionMNIST', 'cifar100noisy'):
         return CifarTransforms(args)
+    if args.dataset in ('mnist', 'DirtyMNIST'):
+        return MNISTTransforms(args)
     raise NotImplementedError(f"Transforms not implemented for {args.dataset}")
