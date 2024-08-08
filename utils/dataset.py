@@ -2,7 +2,7 @@ from functools import partial
 
 from ddu_dirty_mnist import DirtyMNIST
 from torch.utils.data import Dataset, DataLoader
-from torchvision.datasets import CIFAR10, CIFAR100, FashionMNIST
+from torchvision.datasets import CIFAR10, CIFAR100, FashionMNIST, MNIST
 
 from .datasets import CIFAR100_noisy_fine
 from .transforms import init_transforms
@@ -46,6 +46,9 @@ def init_dataset(args):
         num_classes = 100
     elif args.dataset == 'FashionMNIST':
         dataset_fn = partial(FashionMNIST, root=args.data_path, download=True)
+        num_classes = 10
+    elif args.dataset == 'MNIST':
+        dataset_fn = partial(MNIST, root=args.data_path, download=True)
         num_classes = 10
     elif args.dataset == 'DirtyMNIST':
         # Deterministic Neural Networks with Appropriate Inductive Biases Capture Epistemic and Aleatoric Uncertainty
