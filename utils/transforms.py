@@ -28,14 +28,21 @@ class MNISTTransforms(DatasetTransforms):
 
     def train_cached(self):
         return v2.Compose([
-            v2.ToImage(), v2.ToDtype(torch.float32, scale=True), v2.Normalize((0.1307,), (0.3081,))
+            v2.ToImage(), v2.ToDtype(torch.float32, scale=True),
         ])
 
     def train_runtime(self):
-        return None
+        return v2.Compose([
+            v2.RandomHorizontalFlip(),
+            v2.RandomAffine(degrees=20, translate=(0.1, 0.1), scale=(0.9, 1.1)),
+            v2.ColorJitter(brightness=0.2, contrast=0.2),
+            v2.Normalize((0.1307,), (0.3081,))
+        ])
 
     def test_cached(self):
-        return self.train_cached()
+        return v2.Compose([
+            v2.ToImage(), v2.ToDtype(torch.float32, scale=True), v2.Normalize((0.1307,), (0.3081,))
+        ])
 
     def test_runtime(self):
         return None
