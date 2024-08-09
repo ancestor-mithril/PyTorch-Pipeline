@@ -1,6 +1,5 @@
 from functools import partial
 
-from ddu_dirty_mnist import DirtyMNIST
 from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets import CIFAR10, CIFAR100, FashionMNIST, MNIST
 
@@ -54,6 +53,8 @@ def init_dataset(args):
         # Deterministic Neural Networks with Appropriate Inductive Biases Capture Epistemic and Aleatoric Uncertainty
         # https://github.com/omegafragger/DDU
         # Dataset: https://github.com/BlackHC/ddu_dirty_mnist
+        from ddu_dirty_mnist import DirtyMNIST
+
         dataset_fn = partial(DirtyMNIST, root=args.data_path, download=True)
         num_classes = 10
     else:
