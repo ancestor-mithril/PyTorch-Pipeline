@@ -68,6 +68,8 @@ def create_run(dataset, model, optimizer, seed, epochs, es_patience, batch_size,
         f" --autoaug"
         f" --tta"
         f" --disable_progress_bar"
+        f" --stderr"
+        f" --verbose"
     ) + (" --half" if torch.cuda.is_available() else "")
 
 

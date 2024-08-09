@@ -25,7 +25,7 @@ class Trainer:
         self.args = args
 
         self.logdir = self.init_logdir()
-        self.logger = init_logger(self.logdir, args.verbose)
+        self.logger = init_logger(self.logdir, args.verbose, args.stderr)
         self.logger.log_both(args)
 
         seed_everything(args.seed)
@@ -74,6 +74,7 @@ class Trainer:
         params.pop('data_path')
         params.pop('disable_progress_bar')
         params.pop('verbose')
+        params.pop('stderr')
         params.pop('half')
         params.pop('num_threads')
 

@@ -32,6 +32,7 @@ if __name__ == '__main__':
     parser.add_argument('--half', action='store_true', default=False, help='half')
     parser.add_argument('--disable_progress_bar', action='store_true', default=False, help='disable tqdm')
     parser.add_argument('--verbose', action='store_true', default=False, help='verbose')
+    parser.add_argument('--stderr', action='store_true', default=False, help='log to stderr instead of stdout')
 
     args = parser.parse_args()
     args.scheduler_params = json.loads(args.scheduler_params.replace('\'', '"'))

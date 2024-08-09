@@ -7,7 +7,7 @@ logger: Optional["Logger"] = None
 
 
 class Logger:
-    def __init__(self, logdir: str, verbose: bool):
+    def __init__(self, logdir: str, verbose: bool, stderr: bool):
         file_logger = logging.getLogger("Pipeline.file")
         file_logger.setLevel(logging.INFO)
         os.makedirs(logdir, exist_ok=True)
@@ -17,7 +17,7 @@ class Logger:
 
         console_logger = logging.getLogger("Pipeline.console")
         console_logger.setLevel(logging.INFO)
-        stream_handler = logging.StreamHandler(sys.stdout)
+        stream_handler = logging.StreamHandler(sys.stderr if stderr else sys.stdout)
         console_logger.addHandler(stream_handler)
         self.console_logger = console_logger
         self.verbose = verbose
@@ -34,9 +34,9 @@ class Logger:
         self.console_logger.info(string)
 
 
-def init_logger(logdir: str, verbose: bool) -> Logger:
+def init_logger(logdir: str, verbose: bool, stderr: bool) -> Logger:
     global logger
-    logger = Logger(logdir, verbose)
+    logger = Logger(logdir, verbose, stderr)
     return logger
 
 
