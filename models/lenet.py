@@ -12,7 +12,7 @@ import torch.nn.functional as F
 
 
 class LeNet(nn.Module):
-    def __init__(self, num_classes: int, input_channels: int, temp: float):
+    def __init__(self, num_classes: int, input_channels: int):
         super(LeNet, self).__init__()
         self.num_classes = num_classes
         self.conv1 = nn.Conv2d(input_channels, 6, 5)
@@ -32,4 +32,4 @@ class LeNet(nn.Module):
 
 
 def LeNet_MNIST(num_classes):
-    return LeNet(num_classes=num_classes, input_channels=1, temp=1.0)
+    return LeNet(num_classes=num_classes, input_channels=1)
