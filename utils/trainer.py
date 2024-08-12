@@ -5,6 +5,7 @@ from functools import cached_property
 
 import torch
 from timed_decorator.simple_timed import timed
+from torch import GradScaler
 from torch.backends import cudnn
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.transforms.v2.functional import hflip, vflip  # noqa: F401
@@ -37,6 +38,10 @@ class Trainer:
         if self.device.type == 'cuda':
             cudnn.benchmark = True
             pin_memory = True
+        elif self.device.type == 'cpu' and self.args.half:
+            self.logger.log_both('Warning, training with AMP on CPU takes longer')
+
+        self.scaler = GradScaler(self.device.type, enabled=self.args.half)
 
         self.train_dataset, self.test_dataset = init_dataset(args)
         self.train_loader, self.test_loader = init_loaders(args, self.train_dataset, self.test_dataset, pin_memory)
@@ -147,8 +152,9 @@ class Trainer:
             with torch.autocast(self.device.type, enabled=self.args.half):
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, targets)
-            loss.backward()
-            self.optimizer.step()
+            self.scaler.scale(loss).backward()
+            self.scaler.step(self.optimizer)
+            self.scaler.update()
             self.optimizer.zero_grad()
 
             total_loss += loss.item()
