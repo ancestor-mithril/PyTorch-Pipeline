@@ -49,9 +49,9 @@ Modify experiment_runner.py and then run it.
     * path for dataset files
     * default: `../data`
 8. `-scheduler`
-    * implemented schedulers: `None`, `IncreaseBSOnPlateau`, `ReduceLROnPlateau`, `StepBS`, `StepLR`, `ExponentialBS`, `ExponentialLR`, `PolynomialBS`, `PolynomialLR`, `CosineAnnealingBS`, `CosineAnnealingLR`, `CosineAnnealingBSWithWarmRestarts`, `CosineAnnealingWarmRestarts`, `CyclicBS`, `CyclicLR`, `OneCycleBS`, `OneCycleLR`, `LinearLR`, `LinearBS`
+    * implemented schedulers: `IncreaseBSOnPlateau`, `ReduceLROnPlateau`, `StepBS`, `StepLR`, `ExponentialBS`, `ExponentialLR`, `PolynomialBS`, `PolynomialLR`, `CosineAnnealingBS`, `CosineAnnealingLR`, `CosineAnnealingBSWithWarmRestarts`, `CosineAnnealingWarmRestarts`, `CyclicBS`, `CyclicLR`, `OneCycleBS`, `OneCycleLR`, `LinearLR`, `LinearBS`
     * for other schedulers: please implement them
-    * default: `ReduceLROnPlateau`
+    * default: `None`
 9. `-scheduler_params`
     * a json string which contains all parameters that need to be passed to the schedulers
     * default: `"{}"`
@@ -67,30 +67,34 @@ Modify experiment_runner.py and then run it.
     * implemented reductions: `mean`, `iqr`, `stdmean`
     * for other reductions: please implement them
     * default: `mean`
-13. `-fill`
+13. `-loss_scaling`
+    * implemented loss scaling: `normal-scaling`
+    * for others: please implement them
+    * default: `None`
+14. `-fill`
     * fill value for transformations
     * can be any float between 0 and 1 (recommended: 0.5)
     * default: `None` (`None` usually means 0, this depends on transformation)
-14. `-num_threads`
+15. `-num_threads`
     * default number of threads to be used by PyTorch on CPU
     * can be any non-zero uint
     * default: `None` (`None` means half of the available threads)
-15. `-seed`
+16. `-seed`
     * seed for numpy, torch, cuda and python random generators
     * can be any uint
     * default: `3`
-16. `--cutout`
+17. `--cutout`
     * if added, uses CutOut (must be implemented first in transformations, currently implemented for `cifar10`, `cifar100`, `cifar100noisy` and `FashionMNIST`)
-17. `--autoaug`
+18. `--autoaug`
     * if added, uses AutoAug (must be implemented first in transformations, currently implemented for `cifar10`, `cifar100`, `cifar100noisy` and `FashionMNIST`)
-18. `--tta`
+19. `--tta`
     * if added, does TTA for validation, using original and horizontally flipped tensor (random horizontal flipped should be used during training)
-19. `--half`
+20. `--half`
     * if added, uses torch amp (faster, less VRAM)
-20. `--disable_progress_bar`
+21. `--disable_progress_bar`
     * if added, disables tqdm bar which tracks training progression
-21. `--verbose`
+22. `--verbose`
     * if added, prints stuff to console
-22. `--stderr`
+23. `--stderr`
     * if added, prints to stderr instead of stdout; works great in combination with silent experiment_runner
    

@@ -11,7 +11,7 @@ class FakeScheduler:
         pass
 
 def init_scheduler(args, optimizer: Optimizer, train_loader: DataLoader):  # noqa C901
-    if args.scheduler == 'None':
+    if args.scheduler is None:
 
         scheduler = FakeScheduler()
     elif args.scheduler == 'IncreaseBSOnPlateau':

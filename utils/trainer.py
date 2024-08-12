@@ -52,6 +52,8 @@ class Trainer:
         self.writer = SummaryWriter(log_dir=self.logdir)
         self.best_metric = 0.0
 
+        self.optimize()
+
     def optimize(self):
         self.logger.log_both('Optimizing model')
         self.model = try_optimize(self.model)
@@ -64,17 +66,14 @@ class Trainer:
 
     @cached_property
     def scheduler_metric(self):
-        # TODO: Remove this after adding self.args.scheduler_metric
         return 'Train/Loss' if not hasattr(self.args, 'scheduler_metric') else self.args.scheduler_metric
 
     @cached_property
     def optimized_metric(self):
-        # TODO: Remove this after adding self.args.optimized_metric
         return 'Val/Accuracy' if not hasattr(self.args, 'optimized_metric') else self.args.optimized_metric
 
     @cached_property
     def es_metric(self):
-        # TODO: Remove this after adding self.args.es_metric
         return 'Train/Loss' if not hasattr(self.args, 'es_metric') else self.args.es_metric
 
     def init_logdir(self):
