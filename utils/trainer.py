@@ -53,8 +53,13 @@ class Trainer:
         self.best_metric = 0.0
 
     def optimize(self):
+        self.logger.log_both('Optimizing model')
         self.model = try_optimize(self.model)
+
+        self.logger.log_both('Optimizing criterion')
         self.criterion = try_optimize(self.criterion)
+
+        self.logger.log_both('Optimizing optimizer')
         self.optimizer = try_optimize(self.optimizer)
 
     @cached_property

@@ -3,6 +3,8 @@ import random
 import numpy as np
 import torch
 
+from utils.logger import get_logger
+
 
 def seed_everything(seed):
     if seed is None:
@@ -18,22 +20,24 @@ def seed_everything(seed):
 def try_script(x):
     try:
         return torch.jit.script(x)
-    except:
+    except:  # noqa E722
+        get_logger().log_both('Scripting failed')
         return x
 
 
 def try_trace(x):
     try:
         return torch.jit.trace(x)
-    except:
+    except:  # noqa E722
+        get_logger().log_both('Tracing failed')
         return x
 
 
 def try_optimize(x, optimization: str = 'script'):
-    if optimization is 'script':
+    if optimization == 'script':
         return try_script(x)
-    elif optimization is 'trace':
+    elif optimization == 'trace':
         return try_trace(x)
-    elif optimization is 'compile':
+    elif optimization == 'compile':
         return torch.compile(x)
     raise NotImplementedError(f'Optimization {optimization} not implemented')
