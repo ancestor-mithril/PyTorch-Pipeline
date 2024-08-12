@@ -35,13 +35,17 @@ class Trainer:
         self.logger.log_both(f'Using {self.device}')
 
         pin_memory = False
+
         if self.device.type == 'cuda':
             cudnn.benchmark = True
             pin_memory = True
-        elif self.device.type == 'cpu' and self.args.half:
-            self.logger.log_both('Warning, training with AMP on CPU takes longer')
+            enable_grad_scaler = self.args.half
+        else:
+            self.args.half = False
+            enable_grad_scaler = False
+            # half is slower on cpu. does not work on mps
 
-        self.scaler = GradScaler(self.device.type, enabled=self.args.half)
+        self.scaler = GradScaler(self.device.type, enabled=enable_grad_scaler)
 
         self.train_dataset, self.test_dataset = init_dataset(args)
         self.train_loader, self.test_loader = init_loaders(args, self.train_dataset, self.test_dataset, pin_memory)
