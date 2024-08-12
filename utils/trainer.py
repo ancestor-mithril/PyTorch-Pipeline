@@ -17,7 +17,7 @@ from utils.logger import init_logger
 from utils.loss import init_criterion
 from utils.optimizer import init_optimizer
 from utils.scheduler import init_scheduler
-from utils.utils import seed_everything
+from utils.utils import seed_everything, try_optimize
 
 
 class Trainer:
@@ -42,11 +42,8 @@ class Trainer:
         self.train_loader, self.test_loader = init_loaders(args, self.train_dataset, self.test_dataset, pin_memory)
 
         self.model = init_model(args, self.train_dataset.num_classes).to(self.device)
-        self.model = torch.jit.script(self.model)
 
         self.criterion = init_criterion(args).to(self.device)
-        if not hasattr(self.criterion, 'progress_tracker'):  # DEBUG
-            self.criterion = torch.jit.script(self.criterion)
         self.optimizer = init_optimizer(args, self.model.parameters())
 
         self.scheduler = init_scheduler(args, self.optimizer, self.train_loader)
@@ -54,6 +51,11 @@ class Trainer:
 
         self.writer = SummaryWriter(log_dir=self.logdir)
         self.best_metric = 0.0
+
+    def optimize(self):
+        self.model = try_optimize(self.model)
+        self.criterion = try_optimize(self.criterion)
+        self.optimizer = try_optimize(self.optimizer)
 
     @cached_property
     def scheduler_metric(self):
