@@ -1,4 +1,4 @@
-from functools import partial
+from functools import partial, lru_cache
 
 import torch
 from torch import Tensor, nn
@@ -69,9 +69,13 @@ class NormalScalingLoss(nn.Module):
         self.loss = loss
         self.reducer = reducer
 
+    @lru_cache(maxsize=None)
+    def get_weights(self, shape: torch.Size, dtype: torch.dtype, device: torch.device) -> Tensor:
+        return torch.normal(1.0, 0.5, shape, dtype=dtype, device=device)
+
     def forward(self, outputs, targets):
         loss = self.loss(outputs, targets)
-        return self.reducer(loss * torch.zeros_like(loss).normal_(1.0, 0.5))
+        return self.reducer(loss * self.get_weights(loss.shape, loss.dtype, loss.device))
 
 
 def init_criterion(args):

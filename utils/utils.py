@@ -20,16 +20,16 @@ def seed_everything(seed):
 def try_script(x):
     try:
         return torch.jit.script(x)
-    except:  # noqa E722
-        get_logger().log_both('Scripting failed')
+    except Exception as e:  # noqa E722
+        get_logger().log_both(f'Scripting failed due to {type(e).__name__}')
         return x
 
 
 def try_trace(x):
     try:
         return torch.jit.trace(x)
-    except:  # noqa E722
-        get_logger().log_both('Tracing failed')
+    except Exception as e:  # noqa E722
+        get_logger().log_both(f'Tracing failed due to {type(e).__name__}')
         return x
 
 
