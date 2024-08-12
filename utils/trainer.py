@@ -45,6 +45,8 @@ class Trainer:
         self.model = torch.jit.script(self.model)
 
         self.criterion = init_criterion(args).to(self.device)
+        if not hasattr(self.criterion, 'progress_tracker'):  # DEBUG
+            self.criterion = torch.jit.script(self.criterion)
         self.optimizer = init_optimizer(args, self.model.parameters())
 
         self.scheduler = init_scheduler(args, self.optimizer, self.train_loader)
