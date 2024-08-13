@@ -69,7 +69,7 @@ class NormalScalingLoss(nn.Module):
         self.loss = loss
         self.reducer = reducer
 
-    @lru_cache(maxsize=None)
+    @lru_cache(maxsize=32)
     def get_weights(self, shape: torch.Size, dtype: torch.dtype, device: torch.device) -> Tensor:
         return torch.normal(1.0, 0.5, shape, dtype=dtype, device=device)
 
