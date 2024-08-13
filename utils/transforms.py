@@ -25,7 +25,7 @@ class DatasetTransforms(ABC):
 class MNISTTransforms(DatasetTransforms):
     def __init__(self, args):
         self.args = args
-        self.normalize = v2.Normalize((0.1307,), (0.3081,))
+        self.normalize = v2.Normalize((0.1307,), (0.3081,), inplace=True)
 
     def train_cached(self):
         return v2.Compose([
@@ -52,7 +52,7 @@ class MNISTTransforms(DatasetTransforms):
 class CifarTransforms(DatasetTransforms):
     def __init__(self, args):
         self.args = args
-        self.normalize = v2.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010))
+        self.normalize = v2.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010), inplace=True)
 
     def train_cached(self):
         return v2.Compose([
