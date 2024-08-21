@@ -73,7 +73,7 @@ class LossScaler(nn.Module):
         self.loss = loss
         self.reducer = reducer
         self.loss_scaling_range = float(os.getenv('loss_scaling_range', 0.25))
-        get_logger().log(f"Using Loss scaling with scaling range: {self.loss_scaling_range}")
+        get_logger().log_both(f"Using Loss scaling with scaling range: {self.loss_scaling_range}")
 
     @lru_cache(maxsize=32)
     def get_weights(self, shape: torch.Size, dtype: torch.dtype, device: torch.device) -> Tensor:

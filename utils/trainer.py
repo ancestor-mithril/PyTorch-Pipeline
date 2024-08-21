@@ -35,8 +35,6 @@ class Trainer:
         self.device = torch.device(args.device)
         self.logger.log_both(f'Using {self.device}')
 
-        pin_memory = False
-
         if self.device.type == 'cuda':
             cudnn.benchmark = True
             pin_memory = True
@@ -45,6 +43,7 @@ class Trainer:
             self.args.half = False
             enable_grad_scaler = False
             # half is slower on cpu. does not work on mps
+            pin_memory = False
 
         self.scaler = GradScaler(self.device.type, enabled=enable_grad_scaler)
 
