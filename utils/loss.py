@@ -1,8 +1,11 @@
+import os
 from abc import abstractmethod
 from functools import partial, lru_cache
 
 import torch
 from torch import Tensor, nn
+
+from utils.logger import get_logger
 
 
 class MeanReducer(nn.Module):
@@ -69,9 +72,15 @@ class LossScaler(nn.Module):
         super().__init__()
         self.loss = loss
         self.reducer = reducer
+        self.loss_scaling_range = float(os.getenv('loss_scaling_range', 0.25))
+        get_logger().log(f"Using Loss scaling with scaling range: {self.loss_scaling_range}")
+
+    @lru_cache(maxsize=32)
+    def get_weights(self, shape: torch.Size, dtype: torch.dtype, device: torch.device) -> Tensor:
+        return self._get_weights_impl(shape, dtype, device)
 
     @abstractmethod
-    def get_weights(self, shape: torch.Size, dtype: torch.dtype, device: torch.device):
+    def _get_weights_impl(self, shape: torch.Size, dtype: torch.dtype, device: torch.device) -> Tensor:
         pass
 
     def forward(self, outputs, targets):
@@ -80,19 +89,14 @@ class LossScaler(nn.Module):
 
 
 class NormalScalingLoss(LossScaler):
-    @lru_cache(maxsize=32)
-    def get_weights(self, shape: torch.Size, dtype: torch.dtype, device: torch.device) -> Tensor:
-        import os
-        std = float(os.getenv('loss_scaling_range', 0.25))
-        return torch.normal(1.0, std, shape, dtype=dtype, device=device)
+    def _get_weights_impl(self, shape: torch.Size, dtype: torch.dtype, device: torch.device) -> Tensor:
+        return torch.normal(1.0, self.loss_scaling_range, shape, dtype=dtype, device=device)
 
 
 class UniformScalingLoss(LossScaler):
-    @lru_cache(maxsize=32)
-    def get_weights(self, shape: torch.Size, dtype: torch.dtype, device: torch.device) -> Tensor:
-        import os
-        x = float(os.getenv('loss_scaling_range', 0.25))
-        return torch.zeros(shape, dtype=dtype, device=device).uniform_(1 - x, 1 + x)
+    def _get_weights_impl(self, shape: torch.Size, dtype: torch.dtype, device: torch.device) -> Tensor:
+        return torch.zeros(shape, dtype=dtype, device=device).uniform_(1 - self.loss_scaling_range,
+                                                                       1 + self.loss_scaling_range)
 
 
 def init_criterion(args):
