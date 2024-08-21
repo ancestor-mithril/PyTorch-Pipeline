@@ -7,6 +7,7 @@ import torch
 from timed_decorator.simple_timed import timed
 from torch import GradScaler
 from torch.backends import cudnn
+from torch.nn.utils import clip_grad_norm_
 from torch.utils.tensorboard import SummaryWriter
 from torchvision.transforms.v2.functional import hflip, vflip  # noqa: F401
 from tqdm import tqdm
@@ -157,6 +158,7 @@ class Trainer:
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, targets)
             self.scaler.scale(loss).backward()
+            self.maybe_clip()
             self.scaler.step(self.optimizer)
             self.scaler.update()
             self.optimizer.zero_grad()
@@ -257,3 +259,8 @@ class Trainer:
         self.logger.log(description, to_console=self.args.disable_progress_bar)
         if not self.args.disable_progress_bar:
             tbar.set_description(description)
+
+    def maybe_clip(self):
+        if self.args.clip_value is not None:
+            self.scaler.unscale_(self.optimizer)
+            clip_grad_norm_(self.model.parameters(), self.args.clip_value)

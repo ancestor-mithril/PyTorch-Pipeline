@@ -27,6 +27,7 @@ if __name__ == '__main__':
     parser.add_argument('-fill', default=None, type=float, help='fill value for transformations')
     parser.add_argument('-num_threads', default=None, type=int, help='default number of threads used by pytorch')
     parser.add_argument('-seed', default=3, type=int, help='seed')
+    parser.add_argument('-clip_value', default=None, type=float, help='value for gradient clipping')
     parser.add_argument('--cutout', action='store_true', default=False, help='apply cutout')
     parser.add_argument('--autoaug', action='store_true', default=False, help='apply autoaugment')
     parser.add_argument('--tta', action='store_true', default=False, help='use TTA')
