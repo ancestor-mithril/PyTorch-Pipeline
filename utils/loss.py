@@ -1,3 +1,4 @@
+from abc import abstractmethod
 from functools import partial, lru_cache
 
 import torch
@@ -63,19 +64,35 @@ class LossIQR(nn.Module):
         return self.reducer(loss[mask])
 
 
-class NormalScalingLoss(nn.Module):
+class LossScaler(nn.Module):
     def __init__(self, loss, reducer):
         super().__init__()
         self.loss = loss
         self.reducer = reducer
 
-    @lru_cache(maxsize=32)
-    def get_weights(self, shape: torch.Size, dtype: torch.dtype, device: torch.device) -> Tensor:
-        return torch.normal(1.0, 0.5, shape, dtype=dtype, device=device)
+    @abstractmethod
+    def get_weights(self, shape: torch.Size, dtype: torch.dtype, device: torch.device):
+        pass
 
     def forward(self, outputs, targets):
         loss = self.loss(outputs, targets)
         return self.reducer(loss * self.get_weights(loss.shape, loss.dtype, loss.device))
+
+
+class NormalScalingLoss(LossScaler):
+    @lru_cache(maxsize=32)
+    def get_weights(self, shape: torch.Size, dtype: torch.dtype, device: torch.device) -> Tensor:
+        import os
+        std = float(os.getenv('loss_scaling_range', 0.25))
+        return torch.normal(1.0, std, shape, dtype=dtype, device=device)
+
+
+class UniformScalingLoss(LossScaler):
+    @lru_cache(maxsize=32)
+    def get_weights(self, shape: torch.Size, dtype: torch.dtype, device: torch.device) -> Tensor:
+        import os
+        x = float(os.getenv('loss_scaling_range', 0.25))
+        return torch.zeros(shape, dtype=dtype, device=device).uniform_(1 - x, 1 + x)
 
 
 def init_criterion(args):
@@ -98,5 +115,7 @@ def init_criterion(args):
         return loss
     elif args.loss_scaling == 'normal-scaling':
         return NormalScalingLoss(loss, MeanReducer())
+    elif args.loss_scaling == 'uniform-scaling':
+        return UniformScalingLoss(loss, MeanReducer())
     else:
         raise NotImplementedError(f'Loss scaling {args.loss_scaling} not implemented')
