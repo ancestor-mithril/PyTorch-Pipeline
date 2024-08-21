@@ -71,7 +71,7 @@ class Trainer:
         self.criterion = try_optimize(self.criterion)
 
         self.logger.log_both('Optimizing optimizer')
-        self.optimizer = try_optimize(self.optimizer)
+        self.optimizer = try_optimize(self.optimizer)  # trace/script does not work, compile works instead (on UNIX)
 
     @cached_property
     def scheduler_metric(self):

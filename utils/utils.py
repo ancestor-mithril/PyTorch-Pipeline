@@ -33,11 +33,19 @@ def try_trace(x):
         return x
 
 
+def try_compile(x, **kwargs):
+    try:
+        return torch.compile(x, **kwargs)
+    except Exception as e:  # noqa E722
+        get_logger().log_both(f'Compiling failed due to {type(e).__name__}')
+        return x
+
+
 def try_optimize(x, optimization: str = 'script'):
     if optimization == 'script':
         return try_script(x)
     elif optimization == 'trace':
         return try_trace(x)
     elif optimization == 'compile':
-        return torch.compile(x)
+        return try_compile(x)  # torch.compile may also raise during training
     raise NotImplementedError(f'Optimization {optimization} not implemented')
