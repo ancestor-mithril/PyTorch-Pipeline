@@ -517,8 +517,7 @@ def main(base_dir, results_dir):
     write_stats(os.path.join(results_dir, 'summary.json'), os.path.join(results_dir, 'tex.txt'))
 
 
-if __name__ == '__main__':
-    main('./all_runs', 'Graphics')
+def prepare_for_upload(results_dir):
     os.makedirs('./Upload', exist_ok=True)
     files = [
         'StepBS_cifar100_16_30,2.0_0.001_2525_first.png',
@@ -531,6 +530,16 @@ if __name__ == '__main__':
         'IncreaseBSOnPlateau_cifar10_16_5.0_0.001_2_second.png',
         'ExponentialBS_cifar100_16_1.01_0.001_2525_first.png',
         'ExponentialBS_cifar100_16_1.01_0.001_2525_second.png',
+        'CosineAnnealingBS_cifar100_32_50_0.001_2_first.png',
+        'CosineAnnealingBS_cifar100_32_50_0.001_2_second.png',
+        'CosineAnnealingBSWithWarmRestarts_cifar100_32_50,1_0.001_2_first.png',
+        'CosineAnnealingBSWithWarmRestarts_cifar100_32_50,1_0.001_2_second.png'
     ]
     for file in files:
-        shutil.copy(f'./Graphics/plots/{file}', f'./Upload/{file}')
+        shutil.copy(f'./{results_dir}/plots/{file}', f'./Upload/{file}')
+    print('Done')
+
+
+if __name__ == '__main__':
+    main('./all_runs', 'Graphics')
+    prepare_for_upload('Graphics')
