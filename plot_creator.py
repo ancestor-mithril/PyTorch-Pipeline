@@ -2,6 +2,7 @@ import glob
 import json
 import os
 import warnings
+from time import sleep
 
 import numpy as np
 import seaborn as sns
@@ -23,8 +24,14 @@ def get_tensorboard_scalars(path):
 
 
 def parse_dataset_name(path):
-    assert path.split(os.path.sep)[5].startswith('epochs_'), str(path.split(os.path.sep)[5:7])
-    return path.split(os.path.sep)[6]
+    split = path.split(os.sep)
+    assert split[5].startswith('epochs_'), str(split[5:7])
+    if split[6].startswith('es_patience_'):
+        assert split[8].startswith('scheduler_'), str(split[7:9])
+        return split[7]
+    else:
+        assert split[7].startswith('scheduler_'), str(split[6:8])
+        return path.split(os.path.sep)[6]
 
 
 def parse_scheduler_type(path):
@@ -40,20 +47,20 @@ def parse_seed_type(path):
 
 def get_match_rules():
     match_rules = {
-        ('CosineAnnealingBS', 'total_iters_100_max_batch_size_1000_'):
+        ('CosineAnnealingBS', 'total_iters_100_max_batch_size_256_'):
             ('CosineAnnealingLR', 'T_max_100_'),
-        ('CosineAnnealingBS', 'total_iters_200_max_batch_size_1000_'):
+        ('CosineAnnealingBS', 'total_iters_200_max_batch_size_256_'):
             ('CosineAnnealingLR', 'T_max_200_'),
-        ('CosineAnnealingBS', 'total_iters_50_max_batch_size_1000_'):
+        ('CosineAnnealingBS', 'total_iters_50_max_batch_size_256_'):
             ('CosineAnnealingLR', 'T_max_50_'),
 
-        ('CosineAnnealingBSWithWarmRestarts', 't_0_100_factor_1_max_batch_size_1000_'):
+        ('CosineAnnealingBSWithWarmRestarts', 't_0_100_factor_1_max_batch_size_256_'):
             ('CosineAnnealingWarmRestarts', 'T_0_100_T_mult_1_'),
-        ('CosineAnnealingBSWithWarmRestarts', 't_0_100_factor_2_max_batch_size_1000_'):
+        ('CosineAnnealingBSWithWarmRestarts', 't_0_100_factor_2_max_batch_size_256_'):
             ('CosineAnnealingWarmRestarts', 'T_0_100_T_mult_2_'),
-        ('CosineAnnealingBSWithWarmRestarts', 't_0_50_factor_1_max_batch_size_1000_'):
+        ('CosineAnnealingBSWithWarmRestarts', 't_0_50_factor_1_max_batch_size_256_'):
             ('CosineAnnealingWarmRestarts', 'T_0_50_T_mult_1_'),
-        ('CosineAnnealingBSWithWarmRestarts', 't_0_50_factor_2_max_batch_size_1000_'):
+        ('CosineAnnealingBSWithWarmRestarts', 't_0_50_factor_2_max_batch_size_256_'):
             ('CosineAnnealingWarmRestarts', 'T_0_50_T_mult_2_'),
 
         ('ExponentialBS', 'gamma_1.1_max_batch_size_1000_'):
@@ -93,19 +100,26 @@ def get_match_rules():
 def transform_scheduler_params(x):
     params = {
         'total_iters_100_max_batch_size_1000_': '100',
+        'total_iters_100_max_batch_size_256_': '100',
         'T_max_100_': '100',
         'total_iters_200_max_batch_size_1000_': '200',
+        'total_iters_200_max_batch_size_256_': '200',
         'T_max_200_': '200',
         'total_iters_50_max_batch_size_1000_': '50',
+        'total_iters_50_max_batch_size_256_': '50',
         'T_max_50_': '50',
 
         't_0_100_factor_1_max_batch_size_1000_': '100,1',
+        't_0_100_factor_1_max_batch_size_256_': '100,1',
         'T_0_100_T_mult_1_': '100,1',
         't_0_100_factor_2_max_batch_size_1000_': '100,2',
+        't_0_100_factor_2_max_batch_size_256_': '100,2',
         'T_0_100_T_mult_2_': '100,2',
         't_0_50_factor_1_max_batch_size_1000_': '50,1',
+        't_0_50_factor_1_max_batch_size_256_': '50,1',
         'T_0_50_T_mult_1_': '50,1',
         't_0_50_factor_2_max_batch_size_1000_': '50,2',
+        't_0_50_factor_2_max_batch_size_256_': '50,2',
         'T_0_50_T_mult_2_': '50,2',
 
         'gamma_1.1_max_batch_size_1000_': '1.1',
@@ -143,6 +157,25 @@ def transform_scheduler_params(x):
     return params[x]
 
 
+def skip_runs(tb_paths):
+    # Skip criteria
+    new_paths = []
+    for run in tb_paths:
+        scheduler, scheduler_param, initial_batch_size = parse_scheduler_type(run)
+        if scheduler_param not in (
+            'total_iters_200_max_batch_size_1000_',
+            'total_iters_100_max_batch_size_1000_',
+            'total_iters_50_max_batch_size_1000_',
+            't_0_100_factor_1_max_batch_size_1000_',
+            't_0_50_factor_1_max_batch_size_1000_',
+            't_0_100_factor_2_max_batch_size_1000_',
+            't_0_50_factor_2_max_batch_size_1000_',
+        ):
+            new_paths.append(run)
+
+    return new_paths
+
+
 def match_paths_by_criteria(tb_paths):
     match_rules = get_match_rules()
 
@@ -151,6 +184,7 @@ def match_paths_by_criteria(tb_paths):
         current_path = tb_paths.pop(0)
         dataset = parse_dataset_name(current_path)
         scheduler, scheduler_param, initial_batch_size = parse_scheduler_type(current_path)
+
         seed = parse_seed_type(current_path)
 
         def is_ok(other_path):
@@ -166,7 +200,21 @@ def match_paths_by_criteria(tb_paths):
         matching = [x for x in tb_paths if is_ok(x)]
 
         if len(matching) == 0:
+            print("WARNING")
+            sleep(1)
             print("No matching for", current_path)
+            sleep(1)
+            continue
+        elif len(matching) != 1:
+            print("ERROR")
+            sleep(1)
+            print("ERROR for", scheduler)
+            print(current_path)
+            for x in matching:
+                print(x)
+            print()
+            sleep(1)
+            continue
 
         for x in matching:
             tb_paths.remove(x)
@@ -435,6 +483,7 @@ def main(base_dir, results_dir):
     os.makedirs(os.path.join(results_dir, 'plots'), exist_ok=True)
     tex_file = os.path.join(results_dir, 'results_table.txt')
     tb_paths = get_tensorboard_paths(base_dir)
+    tb_paths = skip_runs(tb_paths)
 
     if os.path.exists(tex_file):
         os.remove(tex_file)
