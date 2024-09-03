@@ -1,7 +1,7 @@
 torch
 tensorboard
 torchvision
-bs_scheduler
+bs-scheduler
 timed-decorator
 tqdm
 numpy

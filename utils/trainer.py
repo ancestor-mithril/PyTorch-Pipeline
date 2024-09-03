@@ -150,7 +150,7 @@ class Trainer:
 
                     self.post_epoch(metrics)
                     self.write_metrics(epoch, metrics, total_training_time)
-                    self.update_tbar(tbar, metrics)
+                    self.update_tbar(tbar, metrics, epoch)
                     if self.early_stopping(metrics):
                         self.logger.log_both("Early stopping")
                         break
@@ -272,9 +272,9 @@ class Trainer:
         es_metric = metrics[self.es_metric]
         return self.early_stopper.step(es_metric)
 
-    def update_tbar(self, tbar, metrics):
+    def update_tbar(self, tbar, metrics, epoch):
         description = self.epoch_description(metrics)
-        self.logger.log(description, to_console=self.args.disable_progress_bar)
+        self.logger.log(f"Epoch: {epoch},", description, to_console=self.args.disable_progress_bar)
         if not self.args.disable_progress_bar:
             tbar.set_description(description)
 
