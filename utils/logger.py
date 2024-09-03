@@ -11,7 +11,7 @@ class Logger:
         file_logger = logging.getLogger("Pipeline.file")
         file_logger.setLevel(logging.INFO)
         os.makedirs(logdir, exist_ok=True)
-        file_handler = logging.FileHandler(os.path.join(logdir, 'train.log'), mode='w')
+        file_handler = logging.FileHandler(os.path.join(logdir, "train.log"), mode="w")
         file_logger.addHandler(file_handler)
         self.file_logger = file_logger
 
@@ -23,13 +23,13 @@ class Logger:
         self.verbose = verbose
 
     def log(self, *args, to_console: bool = True):
-        string = ' '.join(map(str, args))
+        string = " ".join(map(str, args))
         self.file_logger.info(string)
         if self.verbose and to_console:
             self.console_logger.info(string)
 
     def log_both(self, *args):
-        string = ' '.join(map(str, args))
+        string = " ".join(map(str, args))
         self.file_logger.info(string)
         self.console_logger.info(string)
 

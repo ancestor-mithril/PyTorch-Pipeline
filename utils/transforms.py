@@ -28,22 +28,27 @@ class MNISTTransforms(DatasetTransforms):
         self.normalize = v2.Normalize((0.1307,), (0.3081,), inplace=True)
 
     def train_cached(self):
-        return v2.Compose([
-            v2.ToImage(), v2.ToDtype(torch.float32, scale=True),
-        ])
+        return v2.Compose(
+            [
+                v2.ToImage(),
+                v2.ToDtype(torch.float32, scale=True),
+            ]
+        )
 
     def train_runtime(self):
-        return v2.Compose([
-            v2.RandomHorizontalFlip(),
-            v2.RandomAffine(degrees=20, translate=(0.1, 0.1), scale=(0.9, 1.1)),
-            v2.ColorJitter(brightness=0.2, contrast=0.2),
-            self.normalize
-        ])
+        return v2.Compose(
+            [
+                v2.RandomHorizontalFlip(),
+                v2.RandomAffine(degrees=20, translate=(0.1, 0.1), scale=(0.9, 1.1)),
+                v2.ColorJitter(brightness=0.2, contrast=0.2),
+                self.normalize,
+            ]
+        )
 
     def test_cached(self):
-        return v2.Compose([
-            v2.ToImage(), v2.ToDtype(torch.float32, scale=True), self.normalize
-        ])
+        return v2.Compose(
+            [v2.ToImage(), v2.ToDtype(torch.float32, scale=True), self.normalize]
+        )
 
     def test_runtime(self):
         return None
@@ -52,41 +57,56 @@ class MNISTTransforms(DatasetTransforms):
 class CifarTransforms(DatasetTransforms):
     def __init__(self, args):
         self.args = args
-        self.normalize = v2.Normalize((0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010), inplace=True)
+        self.normalize = v2.Normalize(
+            (0.4914, 0.4822, 0.4465), (0.2023, 0.1994, 0.2010), inplace=True
+        )
 
     def train_cached(self):
-        return v2.Compose([
-            v2.ToImage(), v2.ToDtype(torch.float32, scale=True),
-        ])
+        return v2.Compose(
+            [
+                v2.ToImage(),
+                v2.ToDtype(torch.float32, scale=True),
+            ]
+        )
 
     def train_runtime(self):
         transforms = [
-            v2.RandomCrop(32, padding=4, fill=0 if self.args.fill is None else self.args.fill),
+            v2.RandomCrop(
+                32, padding=4, fill=0 if self.args.fill is None else self.args.fill
+            ),
             v2.RandomHorizontalFlip(),
         ]
 
         if self.args.autoaug:
-            transforms.append(v2.AutoAugment(v2.AutoAugmentPolicy.CIFAR10, fill=self.args.fill))
+            transforms.append(
+                v2.AutoAugment(v2.AutoAugmentPolicy.CIFAR10, fill=self.args.fill)
+            )
         if self.args.cutout:
             fill_value = 0 if self.args.fill is None else self.args.fill
-            transforms.append(v2.RandomErasing(scale=(0.05, 0.15), value=fill_value, inplace=True))
+            transforms.append(
+                v2.RandomErasing(scale=(0.05, 0.15), value=fill_value, inplace=True)
+            )
 
         transforms.append(self.normalize)
         transforms = v2.Compose(transforms)
         return transforms
 
     def test_cached(self):
-        return v2.Compose([
-            v2.ToImage(), v2.ToDtype(torch.float32, scale=True), self.normalize,
-        ])
+        return v2.Compose(
+            [
+                v2.ToImage(),
+                v2.ToDtype(torch.float32, scale=True),
+                self.normalize,
+            ]
+        )
 
     def test_runtime(self):
         return None
 
 
 def init_transforms(args) -> DatasetTransforms:
-    if args.dataset in ('cifar10', 'cifar100', 'FashionMNIST', 'cifar100noisy'):
+    if args.dataset in ("cifar10", "cifar100", "FashionMNIST", "cifar100noisy"):
         return CifarTransforms(args)
-    if args.dataset in ('MNIST', 'DirtyMNIST'):
+    if args.dataset in ("MNIST", "DirtyMNIST"):
         return MNISTTransforms(args)
     raise NotImplementedError(f"Transforms not implemented for {args.dataset}")

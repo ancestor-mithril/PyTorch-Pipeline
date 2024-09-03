@@ -26,9 +26,9 @@ class CNN(nn.Module):
     @staticmethod
     def create_conv_block(in_channels, out_channels, dropout_p):
         return nn.Sequential(
-            nn.Conv2d(in_channels, out_channels, 3, padding='same'),
+            nn.Conv2d(in_channels, out_channels, 3, padding="same"),
             nn.ReLU(inplace=True),
-            nn.Conv2d(out_channels, out_channels, 3, padding='same'),
+            nn.Conv2d(out_channels, out_channels, 3, padding="same"),
             nn.ReLU(inplace=True),
             nn.BatchNorm2d(out_channels),
             nn.MaxPool2d(2),

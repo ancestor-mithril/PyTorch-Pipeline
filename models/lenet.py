@@ -7,6 +7,7 @@ Refernece:
     Gradient-based  learning  applied  to  document  recognition.
     Proceedings of the IEEE, 86, 2278-2324.
 """
+
 from torch import nn
 import torch.nn.functional as F
 

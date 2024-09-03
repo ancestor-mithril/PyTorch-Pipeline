@@ -33,9 +33,9 @@ class Trainer:
         seed_everything(args.seed)
 
         self.device = torch.device(args.device)
-        self.logger.log_both(f'Using {self.device}')
+        self.logger.log_both(f"Using {self.device}")
 
-        if self.device.type == 'cuda':
+        if self.device.type == "cuda":
             cudnn.benchmark = True
             pin_memory = True
             enable_grad_scaler = self.args.half
@@ -48,7 +48,9 @@ class Trainer:
         self.scaler = GradScaler(self.device.type, enabled=enable_grad_scaler)
 
         self.train_dataset, self.test_dataset = init_dataset(args)
-        self.train_loader, self.test_loader = init_loaders(args, self.train_dataset, self.test_dataset, pin_memory)
+        self.train_loader, self.test_loader = init_loaders(
+            args, self.train_dataset, self.test_dataset, pin_memory
+        )
 
         self.model = init_model(args, self.train_dataset.num_classes).to(self.device)
 
@@ -64,59 +66,73 @@ class Trainer:
         self.optimize()
 
     def optimize(self):
-        self.logger.log_both('Optimizing model')
+        self.logger.log_both("Optimizing model")
         self.model = try_optimize(self.model)
 
-        self.logger.log_both('Optimizing criterion')
+        self.logger.log_both("Optimizing criterion")
         self.criterion = try_optimize(self.criterion)
 
-        self.logger.log_both('Optimizing optimizer')
-        self.optimizer = try_optimize(self.optimizer)  # trace/script does not work, compile works instead (on UNIX)
+        self.logger.log_both("Optimizing optimizer")
+        self.optimizer = try_optimize(
+            self.optimizer
+        )  # trace/script does not work, compile works instead (on UNIX)
 
     @cached_property
     def scheduler_metric(self):
-        return 'Train/Loss' if not hasattr(self.args, 'scheduler_metric') else self.args.scheduler_metric
+        return (
+            "Train/Loss"
+            if not hasattr(self.args, "scheduler_metric")
+            else self.args.scheduler_metric
+        )
 
     @cached_property
     def optimized_metric(self):
-        return 'Val/Accuracy' if not hasattr(self.args, 'optimized_metric') else self.args.optimized_metric
+        return (
+            "Val/Accuracy"
+            if not hasattr(self.args, "optimized_metric")
+            else self.args.optimized_metric
+        )
 
     @cached_property
     def es_metric(self):
-        return 'Train/Loss' if not hasattr(self.args, 'es_metric') else self.args.es_metric
+        return (
+            "Train/Loss" if not hasattr(self.args, "es_metric") else self.args.es_metric
+        )
 
     def init_logdir(self):
         params = {**self.args.__dict__}
-        params.pop('device')
-        params.pop('data_path')
-        params.pop('disable_progress_bar')
-        params.pop('verbose')
-        params.pop('stderr')
-        params.pop('half')
-        params.pop('num_threads')
+        params.pop("device")
+        params.pop("data_path")
+        params.pop("disable_progress_bar")
+        params.pop("verbose")
+        params.pop("stderr")
+        params.pop("half")
+        params.pop("num_threads")
 
         # removed for no info, add again if needed
-        params.pop('criterion')
+        params.pop("criterion")
 
         # FIXME: Adding scheduler and scheduler params means changing plot creator script
         no_keys = [
-            'dataset',
+            "dataset",
             # 'scheduler',
             # 'scheduler_params',
-            'model',
-            'reduction'
+            "model",
+            "reduction",
         ]
 
-        params = [f'{k}_{v}' if k not in no_keys else f'{v}' for k, v in params.items()]
-        params = [re.sub(r'[^a-zA-Z0-9_.-]', '_', x.replace(' ', '')) for x in params]
-        params = [re.sub('_+', '_', x) for x in params]
+        params = [f"{k}_{v}" if k not in no_keys else f"{v}" for k, v in params.items()]
+        params = [re.sub(r"[^a-zA-Z0-9_.-]", "_", x.replace(" ", "")) for x in params]
+        params = [re.sub("_+", "_", x) for x in params]
 
         now = datetime.now()
-        logdir = os.path.join('runs', now.strftime('%y-%m-%d'), now.strftime('%H-%M-%S'), *params)
+        logdir = os.path.join(
+            "runs", now.strftime("%y-%m-%d"), now.strftime("%H-%M-%S"), *params
+        )
         return logdir
 
     def get_lr(self):
-        return self.optimizer.param_groups[0]['lr']
+        return self.optimizer.param_groups[0]["lr"]
 
     def get_bs(self):
         return self.train_loader.batch_sampler.batch_size
@@ -128,7 +144,7 @@ class Trainer:
             with tqdm(epochs, disable=self.args.disable_progress_bar) as tbar:
                 for epoch in tbar:
                     metrics, elapsed = self.train()
-                    total_training_time += elapsed / 1e+9
+                    total_training_time += elapsed / 1e9
 
                     metrics.update(self.val())
 
@@ -141,7 +157,7 @@ class Trainer:
         except KeyboardInterrupt:
             pass
         with open("results.txt", "a") as f:
-            f.write(f'{self.logdir} -> {self.best_metric}\n')
+            f.write(f"{self.logdir} -> {self.best_metric}\n")
         self.logger.log_both(f"Best: {self.best_metric}, after {epoch} epochs")
 
     @timed(stdout=False, return_time=True)
@@ -152,7 +168,9 @@ class Trainer:
         total_loss = 0.0
 
         for inputs, targets in self.train_loader:
-            inputs, targets = inputs.to(self.device, non_blocking=True), targets.to(self.device, non_blocking=True)
+            inputs, targets = inputs.to(self.device, non_blocking=True), targets.to(
+                self.device, non_blocking=True
+            )
             with torch.autocast(self.device.type, enabled=self.args.half):
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, targets)
@@ -167,10 +185,7 @@ class Trainer:
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-        return {
-            'Train/Accuracy': 100. * correct / total,
-            'Train/Loss': total_loss
-        }
+        return {"Train/Accuracy": 100.0 * correct / total, "Train/Loss": total_loss}
 
     @torch.inference_mode()
     def val(self):
@@ -180,7 +195,9 @@ class Trainer:
         total_loss = 0.0
 
         for inputs, targets in self.test_loader:
-            inputs, targets = inputs.to(self.device, non_blocking=True), targets.to(self.device, non_blocking=True)
+            inputs, targets = inputs.to(self.device, non_blocking=True), targets.to(
+                self.device, non_blocking=True
+            )
             with torch.autocast(self.device.type, enabled=self.args.half):
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, targets)
@@ -195,10 +212,7 @@ class Trainer:
             total += targets.size(0)
             correct += predicted.eq(targets).sum().item()
 
-        return {
-            'Val/Accuracy': 100. * correct / total,
-            'Val/Loss': total_loss
-        }
+        return {"Val/Accuracy": 100.0 * correct / total, "Val/Loss": total_loss}
 
     def save_checkpoint(self, metrics):
         optimized_metric = metrics[self.optimized_metric]
@@ -207,25 +221,28 @@ class Trainer:
             # TODO: Save model if saving is enabled
 
     def empty_cache(self):
-        if self.device.type == 'cuda':
+        if self.device.type == "cuda":
             torch.cuda.empty_cache()
 
     def write_metrics(self, epoch, metrics, training_time):
         for k, v in metrics.items():
             self.writer.add_scalar(k, v, epoch)
-        self.writer.add_scalar('Train/Time', training_time, epoch)
+        self.writer.add_scalar("Train/Time", training_time, epoch)
 
-        self.writer.add_scalar('Trainer/Learning Rate', self.get_lr(), epoch)
-        self.writer.add_scalar('Trainer/Batch Size', self.get_bs(), epoch)
+        self.writer.add_scalar("Trainer/Learning Rate", self.get_lr(), epoch)
+        self.writer.add_scalar("Trainer/Batch Size", self.get_bs(), epoch)
 
     def scheduler_step(self, metrics):
         if self.scheduler is None:
             return
 
-        if type(self.scheduler).__name__ in ('ReduceLROnPlateau', 'IncreaseBSOnPlateau'):
+        if type(self.scheduler).__name__ in (
+            "ReduceLROnPlateau",
+            "IncreaseBSOnPlateau",
+        ):
             scheduler_metric = metrics[self.scheduler_metric]
 
-            if type(self.scheduler).__name__ == 'IncreaseBSOnPlateau':
+            if type(self.scheduler).__name__ == "IncreaseBSOnPlateau":
                 self.scheduler.step(metric=scheduler_metric)
                 # TODO: keep the same name
             else:
@@ -243,11 +260,13 @@ class Trainer:
         val_acc = round(metrics["Val/Accuracy"], 2)
         best = round(self.best_metric, 2)
         # DEBUG
-        if hasattr(self.criterion, 'progress_tracker'):
-            progress = round(torch.mean(torch.Tensor(self.criterion.progress_tracker)).item(), 2)
+        if hasattr(self.criterion, "progress_tracker"):
+            progress = round(
+                torch.mean(torch.Tensor(self.criterion.progress_tracker)).item(), 2
+            )
             self.criterion.progress_tracker = []
-            return f'Train: {train_acc}, Val: {val_acc}, Best: {best}, Progress: {progress}'
-        return f'Train: {train_acc}, Val: {val_acc}, Best: {best}'
+            return f"Train: {train_acc}, Val: {val_acc}, Best: {best}, Progress: {progress}"
+        return f"Train: {train_acc}, Val: {val_acc}, Best: {best}"
 
     def early_stopping(self, metrics):
         es_metric = metrics[self.es_metric]

@@ -4,7 +4,7 @@ from utils.logger import get_logger
 
 
 class EarlyStopping:
-    def __init__(self, mode='min', min_delta=0.0, patience=10, percentage=False):
+    def __init__(self, mode="min", min_delta=0.0, patience=10, percentage=False):
         self.is_better = None
         self.mode = mode
         self.min_delta = min_delta
@@ -27,7 +27,9 @@ class EarlyStopping:
             return False
 
         if np.isnan(metrics):
-            get_logger().log_both("None encountered in metrics. Early stopping activated.")
+            get_logger().log_both(
+                "None encountered in metrics. Early stopping activated."
+            )
             return True
 
         if self.is_better(metrics, self.best):
@@ -41,18 +43,18 @@ class EarlyStopping:
         return False
 
     def init_is_better(self, mode: str, percentage: bool) -> callable:
-        if mode not in ('min', 'max'):
-            raise ValueError('mode ' + mode + ' is unknown!')
+        if mode not in ("min", "max"):
+            raise ValueError("mode " + mode + " is unknown!")
         if not percentage:
-            if mode == 'min':
+            if mode == "min":
                 self.is_better = self.absolute_min
-            if mode == 'max':
+            if mode == "max":
                 self.is_better = self.absolute_max
         else:
-            if mode == 'min':
+            if mode == "min":
                 self.min_delta = 1 - self.min_delta / 100
                 self.is_better = self.relative_min
-            if mode == 'max':
+            if mode == "max":
                 self.min_delta = 1 + self.min_delta / 100
                 self.is_better = self.relative_max
 
@@ -70,4 +72,4 @@ class EarlyStopping:
 
 
 def init_early_stopping(args) -> EarlyStopping:
-    return EarlyStopping(mode='min', min_delta=0.0, patience=args.es_patience)
+    return EarlyStopping(mode="min", min_delta=0.0, patience=args.es_patience)

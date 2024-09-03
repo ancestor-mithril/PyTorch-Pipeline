@@ -21,7 +21,7 @@ def try_script(x):
     try:
         return torch.jit.script(x)
     except Exception as e:  # noqa E722
-        get_logger().log_both(f'Scripting failed due to {type(e).__name__}')
+        get_logger().log_both(f"Scripting failed due to {type(e).__name__}")
         return x
 
 
@@ -29,7 +29,7 @@ def try_trace(x):
     try:
         return torch.jit.trace(x)
     except Exception as e:  # noqa E722
-        get_logger().log_both(f'Tracing failed due to {type(e).__name__}')
+        get_logger().log_both(f"Tracing failed due to {type(e).__name__}")
         return x
 
 
@@ -37,15 +37,15 @@ def try_compile(x, **kwargs):
     try:
         return torch.compile(x, **kwargs)
     except Exception as e:  # noqa E722
-        get_logger().log_both(f'Compiling failed due to {type(e).__name__}')
+        get_logger().log_both(f"Compiling failed due to {type(e).__name__}")
         return x
 
 
-def try_optimize(x, optimization: str = 'script'):
-    if optimization == 'script':
+def try_optimize(x, optimization: str = "script"):
+    if optimization == "script":
         return try_script(x)
-    elif optimization == 'trace':
+    elif optimization == "trace":
         return try_trace(x)
-    elif optimization == 'compile':
+    elif optimization == "compile":
         return try_compile(x)  # torch.compile may also raise during training
-    raise NotImplementedError(f'Optimization {optimization} not implemented')
+    raise NotImplementedError(f"Optimization {optimization} not implemented")
