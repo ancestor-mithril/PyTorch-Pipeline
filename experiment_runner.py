@@ -104,14 +104,30 @@ def generate_runs():
         "cifar100",
         "FashionMNIST",
     ]
-    models = ["preresnet18_c10"]
-    optimizers = ["sgd"]
-    seeds = [2525]
-    epochss = [200]
-    es_patiences = [20]
-    batch_sizes = [16, 32]
-    lrs = [0.001]
-    reductions = ["mean"]
+    models = [
+        "preresnet18_c10"
+    ]
+    optimizers = [
+        "sgd"
+    ]
+    seeds = [
+        2525
+    ]
+    epochss = [
+        200
+    ]
+    es_patiences = [
+        20
+    ]
+    batch_sizes = [
+        16, 32
+    ]
+    lrs = [
+        0.001
+    ]
+    reductions = [
+        "mean"
+    ]
     schedulers = [
         # ('IncreaseBSOnPlateau', {'mode': 'min', 'factor': 2.0, 'max_batch_size': max_batch_size}),
         # ('IncreaseBSOnPlateau', {'mode': 'min', 'factor': 5.0, 'max_batch_size': max_batch_size}),
