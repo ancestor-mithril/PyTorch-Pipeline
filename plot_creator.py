@@ -1,6 +1,7 @@
 import glob
 import json
 import os
+import shutil
 import warnings
 from time import sleep
 
@@ -201,19 +202,19 @@ def match_paths_by_criteria(tb_paths):
 
         if len(matching) == 0:
             print("WARNING")
-            sleep(1)
+            sleep(0.5)
             print("No matching for", current_path)
-            sleep(1)
+            sleep(0.5)
             continue
         elif len(matching) != 1:
             print("ERROR")
-            sleep(1)
+            sleep(0.5)
             print("ERROR for", scheduler)
             print(current_path)
             for x in matching:
                 print(x)
             print()
-            sleep(1)
+            sleep(0.5)
             continue
 
         for x in matching:
@@ -438,13 +439,19 @@ def create_graphics(group_results, results_dir):
                      color=colors[1], linestyle='-', alpha=0.7, ax=axes[0],
                      label=f"{exp_2['scheduler']}({exp_2['scheduler_param']})")
         axes[0].set_ylim(0.0, 1.1)
-        sns.move_legend(axes[0], "upper left", bbox_to_anchor=(0.85, 1.2))
+        axes[0].tick_params(axis='both', which='major', labelsize='x-large')
+        axes[0].set_xlabel('epoch', fontsize='xx-large')
+        axes[0].set_ylabel('Train Acc.', fontsize='xx-large')
+        sns.move_legend(axes[0], "upper left", bbox_to_anchor=(0.675, 1.325), fontsize='xx-large')
 
         # Val
         sns.lineplot(x="epoch", y="Test Acc.", data=df_1, linewidth='1',
                      color=colors[0], linestyle='-', alpha=0.7, ax=axes[1])
         sns.lineplot(x="epoch", y="Test Acc.", data=df_2, linewidth='1',
                      color=colors[1], linestyle='-', alpha=0.7, ax=axes[1])
+        axes[1].tick_params(axis='both', which='major', labelsize='x-large')
+        axes[1].set_xlabel('epoch', fontsize='xx-large')
+        axes[1].set_ylabel('Test Acc.', fontsize='xx-large')
         axes[1].set_ylim(0.0, 1.1)
 
         plt.savefig(os.path.join(results_dir, 'plots', f"{exp_1['scheduler']}_"
@@ -454,18 +461,25 @@ def create_graphics(group_results, results_dir):
                     bbox_inches='tight')
         plt.close()
 
-        fig, axes = plt.subplots(1, 2, figsize=(13, 7.8 / 2))
+        fig, axes = plt.subplots(1, 2, figsize=(13, 7.8 / 2), constrained_layout=True)
         # BS
         sns.lineplot(x="epoch", y="Batch Size", data=df_1, linewidth='1.5',
                      color=colors[0], linestyle='-', alpha=0.7, ax=axes[0])
         sns.lineplot(x="epoch", y="Batch Size", data=df_2, linewidth='1.5',
                      color=colors[1], linestyle='-', alpha=0.7, ax=axes[0])
+        axes[0].tick_params(axis='both', which='major', labelsize='x-large')
+        axes[0].set_xlabel('epoch', fontsize='xx-large')
+        axes[0].set_ylabel('Batch Size', fontsize='xx-large')
 
         # LR
         sns.lineplot(x="epoch", y="Learning Rate", data=df_1, linewidth='1.5',
                      color=colors[0], linestyle='-', alpha=0.7, ax=axes[1])
         sns.lineplot(x="epoch", y="Learning Rate", data=df_2, linewidth='1.5',
                      color=colors[1], linestyle='-', alpha=0.7, ax=axes[1])
+        axes[1].tick_params(axis='both', which='major', labelsize='x-large')
+        axes[1].set_xlabel('epoch', fontsize='xx-large')
+        axes[1].set_ylabel('Learning Rate', fontsize='xx-large')
+        # fig.tight_layout()
 
         plt.savefig(os.path.join(results_dir, 'plots', f"{exp_1['scheduler']}_"
                                                        f"{exp_1['dataset']}_{exp_1['initial_batch_size']}_"
@@ -505,3 +519,18 @@ def main(base_dir, results_dir):
 
 if __name__ == '__main__':
     main('./all_runs', 'Graphics')
+    os.makedirs('./Upload', exist_ok=True)
+    files = [
+        'StepBS_cifar100_16_30,2.0_0.001_2525_first.png',
+        'StepBS_cifar100_16_50,2.0_0.001_2525_first.png',
+        'StepBS_cifar100_16_30,2.0_0.001_2525_second.png',
+        'StepBS_cifar100_16_50,2.0_0.001_2525_second.png',
+        'IncreaseBSOnPlateau_cifar10_16_2.0_0.001_1_first.png',
+        'IncreaseBSOnPlateau_cifar10_16_5.0_0.001_2_first.png',
+        'IncreaseBSOnPlateau_cifar10_16_2.0_0.001_1_second.png',
+        'IncreaseBSOnPlateau_cifar10_16_5.0_0.001_2_second.png',
+        'ExponentialBS_cifar100_16_1.01_0.001_2525_first.png',
+        'ExponentialBS_cifar100_16_1.01_0.001_2525_second.png',
+    ]
+    for file in files:
+        shutil.copy(f'./Graphics/plots/{file}', f'./Upload/{file}')
