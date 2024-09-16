@@ -129,6 +129,10 @@ def get_match_rules():
             "CyclicBS",
             "min_batch_size_10_base_batch_size_500_step_size_down_20_mode_triangular2_max_batch_size_1000_",
         ): ("CyclicLR", "base_lr_0.0001_max_lr_0.01_step_size_up_20_mode_triangular2_"),
+        (
+            "LinearBS",
+            "milestone_200_start_factor_1.0_end_factor_30.0_",
+        ): ("LinearLR", "total_iters_200_start_factor_1.0_end_factor_0.03333_")
     }
     match_rules.update({v: k for k, v in match_rules.items()})  # reversed rules
     return match_rules
@@ -183,6 +187,8 @@ def transform_scheduler_params(x):
         # FIXME: tadam
         "min_batch_size_10_base_batch_size_500_step_size_down_20_mode_triangular2_max_batch_size_1000_": "",
         "base_lr_0.0001_max_lr_0.01_step_size_up_20_mode_triangular2_": "",
+        "milestone_200_start_factor_1.0_end_factor_30.0_": "30",
+        "total_iters_200_start_factor_1.0_end_factor_0.03333_": "0.033",
     }
     return params[x]
 
@@ -224,6 +230,8 @@ def match_paths_by_criteria(tb_paths):
             other_scheduler, other_scheduler_param, other_initial_batch_size = (
                 parse_scheduler_type(other_path)
             )
+            if (other_scheduler, other_scheduler_param) not in match_rules:
+                raise RuntimeError((other_scheduler, other_scheduler_param))
             other_seed = parse_seed_type(other_path)
             if (
                 other_dataset != dataset
@@ -231,6 +239,7 @@ def match_paths_by_criteria(tb_paths):
                 or other_seed != seed
             ):
                 return False
+
             if match_rules[(scheduler, scheduler_param)] != (
                 other_scheduler,
                 other_scheduler_param,
@@ -315,6 +324,8 @@ def get_scheduler_acronym(x):
         "CyclicLR": "CyclicLR",
         "OneCycleBS": "1CycleBS",
         "OneCycleLR": "1CycleLR",
+        "LinearLR": "LinLR",
+        "LinearBS": "LinBS",
     }
     return scheduler_acronym[x]
 
@@ -682,6 +693,8 @@ def prepare_for_upload(results_dir):
         "CosineAnnealingBS_cifar100_32_50_0.001_2_second.png",
         "CosineAnnealingBSWithWarmRestarts_cifar100_32_50,1_0.001_2_first.png",
         "CosineAnnealingBSWithWarmRestarts_cifar100_32_50,1_0.001_2_second.png",
+        "LinearBS_cifar10_16_30_0.001_1_first.png",
+        "LinearBS_cifar10_16_30_0.001_1_second.png",
     ]
     for file in files:
         shutil.copy(f"./{results_dir}/plots/{file}", f"./Upload/{file}")
