@@ -6,6 +6,6 @@ timed-decorator
 tqdm
 numpy
 matplotlib
-seaborn
+seaborn  # Optional: For plot creator
 pandas
 ddu_dirty_mnist  # Optional: For DirtyMNIST
