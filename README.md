@@ -1,5 +1,15 @@
 ﻿# PyTorch-Pipeline
 
+## Simple evironment setup
+```
+conda create -n 312 -c conda-forge python=3.12
+conda activate 312
+# conda install pytorch::pytorch torchvision torchaudio -c pytorch  # Mac
+# conda install pytorch torchvision torchaudio pytorch-cuda=12.4 -c pytorch -c nvidia  # Cuda
+# conda install pytorch torchvision torchaudio cpuonly -c pytorch  # CPU
+conda install tqdm tensorboard
+pip install timed-decorator bs-scheduler
+```
 ## How to use
 ```
 git clone https://github.com/ancestor-mithril/PyTorch-Pipeline.git
