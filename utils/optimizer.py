@@ -11,6 +11,7 @@ def init_optimizer(args, parameters) -> Optimizer:
         "lr": args.lr,
         "momentum": momentum,
         "weight_decay": weight_decay,
+        "nesterov": True,
     }
     if torch.torch_version.TorchVersion(torch.__version__) >= "2.3.0":
         if args.device != "cpu":
