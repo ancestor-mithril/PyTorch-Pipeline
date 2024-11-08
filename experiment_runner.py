@@ -22,7 +22,7 @@ if len(sys.argv) >= 3:
 
 
 def run_command(command_idx):
-    command, idx = command_idx
+    command, env, idx = command_idx
     gpu_index = current_process()._identity[0] % gpu_count
     if torch.cuda.is_available():
         command += f" -device cuda:{gpu_index}"
@@ -38,6 +38,7 @@ def run_command(command_idx):
         command += " -device cpu"
         print("Command:", idx, "on cpu on process", current_process()._identity[0])
 
+    env_str = " ".join(f"{k}={v}" for k, v in env.items())
     today = date.today()
     os.makedirs("./logs", exist_ok=True)
     try:
@@ -48,28 +49,29 @@ def run_command(command_idx):
                 shell=True,
                 check=True,
                 stderr=err,
-                env={**os.environ, "PYTHONOPTIMIZE": "2"},
+                env={**os.environ, "PYTHONOPTIMIZE": "2", **env},
             )
         os.remove(f"./logs/error_{idx}_{today}.txt")
         elapsed = time.time() - start
         with open("./logs/finished_runs.txt", "a+") as fp:
-            fp.write(f"{idx} -> {today} -> " + str(elapsed) + "s + " + command + "\n")
+            fp.write(f"{idx} -> {today} -> " + str(elapsed) + "s + " + env_str + " " + command + "\n")
     except subprocess.CalledProcessError:
         with open(f"./logs/failed_runs_{today}.txt", "a+") as fp:
-            fp.write(command + "\n")
+            fp.write(env_str + " " + command + "\n")
 
 
 def create_run(
-    dataset,
-    model,
-    optimizer,
-    seed,
-    epochs,
-    es_patience,
-    batch_size,
-    scheduler_params,
-    lr,
-    reduction,
+        dataset,
+        model,
+        optimizer,
+        seed,
+        epochs,
+        es_patience,
+        batch_size,
+        scheduler_params,
+        lr,
+        reduction,
+        loss_scaling
 ):
     scheduler_name, scheduler_params = scheduler_params
     scheduler_params = str(scheduler_params).replace(" ", "")
@@ -94,15 +96,19 @@ def create_run(
         f" --disable_progress_bar"
         f" --stderr"
         f" --verbose"
-    ) + (" --half" if torch.cuda.is_available() else "")
+    ) + (
+        " --half" if torch.cuda.is_available() else ""
+    ) + (
+        f" -loss_scaling {loss_scaling}" if loss_scaling is not None else ""
+    )
 
 
 def generate_runs():
     datasets = [
         # 'cifar10',
-        "cifar10",
+        # "cifar10",
         "cifar100",
-        "FashionMNIST",
+        # "FashionMNIST",
     ]
     models = [
         "preresnet18_c10"
@@ -120,7 +126,7 @@ def generate_runs():
         20
     ]
     batch_sizes = [
-        16, 32
+        2048
     ]
     lrs = [
         0.001
@@ -129,49 +135,29 @@ def generate_runs():
         "mean"
     ]
     schedulers = [
-        # ('IncreaseBSOnPlateau', {'mode': 'min', 'factor': 2.0, 'max_batch_size': max_batch_size}),
-        # ('IncreaseBSOnPlateau', {'mode': 'min', 'factor': 5.0, 'max_batch_size': max_batch_size}),
-        # ('ReduceLROnPlateau', {'mode': 'min', 'factor': 0.5}),
-        # ('ReduceLROnPlateau', {'mode': 'min', 'factor': 0.2}),
-        #
-        # ('StepBS', {'step_size': 30, 'gamma': 2.0, 'max_batch_size': max_batch_size}),
-        # ('StepBS', {'step_size': 50, 'gamma': 2.0, 'max_batch_size': max_batch_size}),
-        # ('StepBS', {'step_size': 30, 'gamma': 5.0, 'max_batch_size': max_batch_size}),
-        # ('StepBS', {'step_size': 50, 'gamma': 5.0, 'max_batch_size': max_batch_size}),
-        #
-        # ('StepLR', {'step_size': 30, 'gamma': 0.5}),
-        # ('StepLR', {'step_size': 50, 'gamma': 0.5}),
-        # ('StepLR', {'step_size': 30, 'gamma': 0.2}),
-        # ('StepLR', {'step_size': 50, 'gamma': 0.2}),
-        ("ExponentialBS", {"gamma": 1.01, "max_batch_size": 1000}),
-        ("ExponentialLR", {"gamma": 0.99}),
-        ("PolynomialBS", {"total_iters": 200, "max_batch_size": 1000}),
-        ("PolynomialLR", {"total_iters": 200}),
-        # ('CosineAnnealingBS', {'total_iters': 200, 'max_batch_size': 1000}),
-        # ('CosineAnnealingLR', {'T_max': 200, }),
-        #
-        # ('CosineAnnealingBSWithWarmRestarts', {'t_0': 100, 'factor': 1, 'max_batch_size': 1000}),
-        # ('CosineAnnealingWarmRestarts', {'T_0': 100, 'T_mult': 1}),
-        #
-        # ('CyclicBS', {'min_batch_size':10, 'base_batch_size': 500, 'step_size_down': 20, 'mode': 'triangular2', 'max_batch_size': 1000}),
-        # ('CyclicLR', {'base_lr':0.0001, 'max_lr': 0.01, 'step_size_up': 20, 'mode': 'triangular2'}),
-        #
-        # ('OneCycleBS', {'total_steps':200, 'base_batch_size': 300, 'min_batch_size': 10, 'max_batch_size': 1000}),
-        # ('OneCycleLR', {'total_steps':200, 'max_lr': 0.01}),
+        ("StepLR", {"step_size": 30, "gamma": 0.5}),
+    ]
+    loss_scalings = [
+        None, "uniform-scaling", "normal-scaling"
+    ]
+    loss_scaling_ranges = [
+        0.1, 0.25, 0.5, 0.75
     ]
 
     runs = []
+    envs = []
     for (
-        dataset,
-        model,
-        optimizer,
-        seed,
-        epochs,
-        es_patience,
-        batch_size,
-        scheduler_params,
-        lr,
-        reduction,
+            dataset,
+            model,
+            optimizer,
+            seed,
+            epochs,
+            es_patience,
+            batch_size,
+            scheduler_params,
+            lr,
+            reduction,
+            loss_scaling
     ) in itertools.product(
         datasets,
         models,
@@ -183,6 +169,7 @@ def generate_runs():
         schedulers,
         lrs,
         reductions,
+        loss_scalings
     ):
         run = create_run(
             dataset=dataset,
@@ -195,19 +182,26 @@ def generate_runs():
             scheduler_params=scheduler_params,
             lr=lr,
             reduction=reduction,
+            loss_scaling=loss_scaling
         )
-        runs.append(run)
+        if loss_scaling is not None:
+            for loss_scaling_range in loss_scaling_ranges:
+                runs.append(run)
+                envs.append({'loss_scaling_range': loss_scaling_range})
+        else:
+            runs.append(run)
+            envs.append({})
 
-    return [f"python main.py {i}" for i in runs]
+    return [f"python main.py {i}" for i in runs], envs
 
 
 if __name__ == "__main__":
     freeze_support()
-    runs = generate_runs()
+    runs, envs = generate_runs()
 
     # # Debug
-    # for i in runs:
-    #     print(i)
+    # for i, env in zip(runs, envs):
+    #     print(env, i)
 
     print(len(runs))
     if last_index == -1 or last_index > len(runs):
@@ -216,5 +210,5 @@ if __name__ == "__main__":
     with ProcessPoolExecutor(max_workers=gpu_count * processes_per_gpu) as executor:
         executor.map(
             run_command,
-            [(runs[index], index) for index in range(run_index, last_index)],
+            [(runs[index], envs[index], index) for index in range(run_index, last_index)],
         )

@@ -38,7 +38,7 @@ if __name__ == "__main__":
         "-loss_scaling",
         default=None,
         type=str,
-        help="loss reduction. Can be default, normal-scaling.",
+        help="loss reduction. Can be default, normal-scaling, uniform-scaling.",
     )
     parser.add_argument(
         "-fill", default=None, type=float, help="fill value for transformations"
