@@ -39,25 +39,38 @@ def run_command(command_idx):
         print("Command:", idx, "on cpu on process", current_process()._identity[0])
 
     env_str = " ".join(f"{k}={v}" for k, v in env.items())
+    env.update(os.environ)
     today = date.today()
     os.makedirs("./logs", exist_ok=True)
     try:
         start = time.time()
-        with open(f"./logs/error_{idx}_{today}.txt", "a+") as err:
+        file_name = f"./logs/error_{idx}_{today}.txt"
+        with open(file_name, "a+") as err:
             subprocess.run(
                 command,
                 shell=True,
                 check=True,
                 stderr=err,
-                env={**os.environ, "PYTHONOPTIMIZE": "2", **env},
+                env={**env, "PYTHONOPTIMIZE": "2"},
             )
-        os.remove(f"./logs/error_{idx}_{today}.txt")
         elapsed = time.time() - start
+
+        best_score = '0'
+        with open(file_name, 'r') as f:
+            lines = f.readlines()
+            for line in lines:
+                if line.startswith('Best: '):
+                    best_score = line.split(': ')[1].split(',')[0]
+
         with open("./logs/finished_runs.txt", "a+") as fp:
-            fp.write(f"{idx} -> {today} -> " + str(elapsed) + "s + " + env_str + " " + command + "\n")
+            fp.write(f"{idx} -> {today} -> " + str(elapsed) + "s, score: " + best_score + " + " + env_str + " " + command + "\n")
+        os.remove(file_name)
     except subprocess.CalledProcessError:
         with open(f"./logs/failed_runs_{today}.txt", "a+") as fp:
             fp.write(env_str + " " + command + "\n")
+    except Exception as e:
+        import traceback
+        traceback.print_exc()
 
 
 def create_run(
@@ -126,10 +139,10 @@ def generate_runs():
         20
     ]
     batch_sizes = [
-        2048
+        64
     ]
     lrs = [
-        0.001
+       0.1, 0.75, 0.5, 0.025, 0.01
     ]
     reductions = [
         "mean"
@@ -138,10 +151,11 @@ def generate_runs():
         ("StepLR", {"step_size": 30, "gamma": 0.5}),
     ]
     loss_scalings = [
-        None, "uniform-scaling", "normal-scaling"
+        None,
+        "uniform-scaling", "normal-scaling"
     ]
     loss_scaling_ranges = [
-        0.1, 0.25, 0.5, 0.75
+        '0.1', '0.25', '0.5', '0.75'
     ]
 
     runs = []
