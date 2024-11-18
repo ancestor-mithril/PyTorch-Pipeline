@@ -142,7 +142,7 @@ def generate_runs():
         64
     ]
     lrs = [
-       0.1, 0.75, 0.5, 0.025, 0.01
+       0.1, 0.075, 0.05, 0.025, 0.01
     ]
     reductions = [
         "mean"
@@ -221,8 +221,16 @@ if __name__ == "__main__":
     if last_index == -1 or last_index > len(runs):
         last_index = len(runs)
 
-    with ProcessPoolExecutor(max_workers=gpu_count * processes_per_gpu) as executor:
-        executor.map(
-            run_command,
-            [(runs[index], envs[index], index) for index in range(run_index, last_index)],
-        )
+    with open("./logs/finished_runs.txt", "a+") as fp:
+        fp.write("New experiment: ")
+        fp.write("\n")
+
+    try:
+        with ProcessPoolExecutor(max_workers=gpu_count * processes_per_gpu) as executor:
+            executor.map(
+                run_command,
+                [(runs[index], envs[index], index) for index in range(run_index, last_index)],
+            )
+    finally:
+        with open("./logs/finished_runs.txt", "a+") as fp:
+            fp.write("\n")
