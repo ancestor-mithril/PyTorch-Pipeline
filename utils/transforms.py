@@ -57,7 +57,6 @@ class MNISTTransforms(DatasetTransforms):
             [
                 v2.RandomAffine(degrees=20, translate=(0.1, 0.1), scale=(0.9, 1.1)),
                 v2.ColorJitter(brightness=0.2, contrast=0.2),
-                self.normalize,
             ]
         )
 
@@ -69,13 +68,14 @@ class MNISTTransforms(DatasetTransforms):
     def test_runtime(self):
         return None
 
+    def batch_transforms_cpu(self):
+        return None
+
     def batch_transforms_device(self):
         return v2.Compose([
             BatchHorizontalFlip(),
+            self.normalize
         ])
-
-    def batch_transforms_cpu(self):
-        return None
 
 
 class CifarTransforms(DatasetTransforms):
@@ -105,7 +105,6 @@ class CifarTransforms(DatasetTransforms):
                 v2.AutoAugment(v2.AutoAugmentPolicy.CIFAR10, fill=self.args.fill)
             )
 
-        transforms.append(self.normalize)
         transforms = v2.Compose(transforms)
         return transforms
 
@@ -121,27 +120,23 @@ class CifarTransforms(DatasetTransforms):
     def test_runtime(self):
         return None
 
-    def create_cutout(self, batched: bool):
+    def create_cutout(self):
         fill_value = 0 if self.args.fill is None else self.args.fill
-        if batched:
-            fill = []
-            for mean, std in zip(self.normalize.mean, self.normalize.std):
-                fill.append((fill_value - mean) / std)
-            fill_value = tuple(fill)
-
         return v2.RandomErasing(scale=(0.05, 0.15), value=fill_value, inplace=True)
-
-    def batch_transforms_device(self):
-        return v2.Compose([
-            BatchHorizontalFlip(),
-        ])
 
     def batch_transforms_cpu(self):
         if self.args.cutout:
             return v2.Compose([
-                self.create_cutout(batched=True)
+                self.create_cutout()
             ])
         return None
+
+    def batch_transforms_device(self):
+        return v2.Compose([
+            BatchHorizontalFlip(),
+            self.normalize
+        ])
+
 
 class FashionMNISTTransforms(CifarTransforms):
     def __init__(self, args):
