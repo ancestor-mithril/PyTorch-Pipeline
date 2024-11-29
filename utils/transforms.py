@@ -139,7 +139,7 @@ class CifarTransforms(DatasetTransforms):
     def batch_transforms_cpu(self):
         if self.args.cutout:
             return v2.Compose([
-                self.create_cutout(batched=False)
+                self.create_cutout(batched=True)
             ])
         return None
 
