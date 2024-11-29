@@ -2,7 +2,7 @@ from functools import partial
 from typing import Optional
 
 import torch
-from torch.utils.data import Dataset, DataLoader
+from torch.utils.data import Dataset, DataLoader, default_collate
 from torchvision.datasets import CIFAR10, CIFAR100, FashionMNIST, MNIST
 
 from .datasets import CIFAR100_noisy_fine
@@ -108,6 +108,11 @@ def init_loaders(
         0 if not hasattr(args, "num_workers_val") else args.num_workers_val
     )
 
+    if train_dataset.batch_transforms_cpu is not None:
+        train_collate_fn = lambda batch: train_dataset.batch_transforms_cpu(default_collate(batch))
+    else:
+        train_collate_fn = default_collate
+
     train_loader = DataLoader(
         train_dataset,
         batch_size=args.bs,
@@ -115,12 +120,20 @@ def init_loaders(
         num_workers=num_workers,
         drop_last=drop_last,
         pin_memory=pin_memory,
+        collate_fn=train_collate_fn,
     )
+
+    if test_dataset.batch_transforms_cpu is not None:
+        test_collate_fn = lambda batch: test_dataset.batch_transforms_cpu(default_collate(batch))
+    else:
+        test_collate_fn = default_collate
+
     test_loader = DataLoader(
         test_dataset,
         batch_size=bs_val,
         shuffle=False,
         num_workers=num_workers_val,
         pin_memory=pin_memory,
+        collate_fn=test_collate_fn,
     )
     return train_loader, test_loader

@@ -291,9 +291,7 @@ class Trainer:
             clip_grad_norm_(self.model.parameters(), self.args.clip_value)
 
     def prepare_inputs(self, x: Tensor, device: torch.device) -> Tensor:
-        if self.batch_transforms_cpu is not None:
-            x = self.batch_transforms_cpu(x)
         x = x.to(device, non_blocking=True)
         if self.batch_transforms_device is not None:
-            x = self.batch_transforms_device(x)
+            return self.batch_transforms_device(x)
         return x

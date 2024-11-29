@@ -66,9 +66,9 @@ class DatasetTransforms(ABC):
     def test_cached(self):
         pass
 
-    @abstractmethod
-    def test_runtime(self):
-        pass
+    @staticmethod
+    def test_runtime():
+        return None
 
     def batch_transforms_device(self):
         return None
@@ -103,16 +103,13 @@ class MNISTTransforms(DatasetTransforms):
             [v2.ToImage(), v2.ToDtype(torch.float32, scale=True), self.normalize]
         )
 
-    def test_runtime(self):
-        return None
-
     def batch_transforms_cpu(self):
-        # TODO: Use this in collate_fn
-        return None
+        return StepCompose([
+            AlternativeHorizontalFlip(),
+        ])
 
     def batch_transforms_device(self):
         return StepCompose([
-            AlternativeHorizontalFlip(), # TODO: move on cpu
             self.normalize
         ])
 
@@ -156,23 +153,20 @@ class CifarTransforms(DatasetTransforms):
             ]
         )
 
-    def test_runtime(self):
-        return None
-
     def create_cutout(self):
         fill_value = 0 if self.args.fill is None else self.args.fill
         return v2.RandomErasing(scale=(0.05, 0.15), value=fill_value, inplace=True)
 
     def batch_transforms_cpu(self):
+        transforms = [
+            AlternativeHorizontalFlip(),
+        ]
         if self.args.cutout:
-            return StepCompose([
-                self.create_cutout()
-            ])
-        return None
+            transforms.append(self.create_cutout())
+        return StepCompose(transforms)
 
     def batch_transforms_device(self):
         return StepCompose([
-            AlternativeHorizontalFlip(),
             self.normalize
         ])
 
