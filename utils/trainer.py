@@ -199,14 +199,14 @@ class Trainer:
             targets = targets.to(self.device, non_blocking=True)
 
             with torch.autocast(self.device.type, enabled=self.args.half):
-                # TODO: put TTA in batch
-                outputs = self.model(inputs)
+                if self.args.tta:  # This is flip tta
+                    combined = torch.cat([
+                        inputs, hflip(inputs)
+                    ], dim=0)
+                    outputs = sum(self.model(combined).split(len(inputs)))
+                else:
+                    outputs = self.model(inputs)
                 loss = self.criterion(outputs, targets)
-                if self.args.tta:
-                    outputs += self.model(hflip(inputs))
-                    # TODO: Compare partial TTA with full TTA
-                    # outputs += self.model(vflip(inputs))
-                    # outputs += self.model(vflip(hflip(inputs)))
 
             total_loss += loss.item()
             predicted = outputs.argmax(1)
