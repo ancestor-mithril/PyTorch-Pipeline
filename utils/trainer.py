@@ -5,7 +5,7 @@ from functools import cached_property
 
 import torch
 from timed_decorator.simple_timed import timed
-from torch import GradScaler, Tensor
+from torch import GradScaler, Tensor, nn
 from torch.backends import cudnn
 from torch.nn.utils import clip_grad_norm_
 from torch.utils.tensorboard import SummaryWriter
@@ -48,6 +48,8 @@ class Trainer:
         self.scaler = GradScaler(self.device.type, enabled=enable_grad_scaler)
 
         self.train_dataset, self.test_dataset = init_dataset(args)
+        self.batch_transforms_cpu = self.train_dataset.batch_transforms_cpu
+        self.batch_transforms_device = self.train_dataset.batch_transforms_device
         self.train_loader, self.test_loader = init_loaders(
             args, self.train_dataset, self.test_dataset, pin_memory
         )
@@ -168,9 +170,9 @@ class Trainer:
         total_loss = 0.0
 
         for inputs, targets in self.train_loader:
-            inputs = inputs.to(self.device, non_blocking=True)
+            inputs = self.prepare_inputs(inputs, self.device)
             targets = targets.to(self.device, non_blocking=True)
-            inputs = self.maybe_batch_transforms(inputs)
+
             with torch.autocast(self.device.type, enabled=self.args.half):
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, targets)
@@ -284,7 +286,10 @@ class Trainer:
             self.scaler.unscale_(self.optimizer)
             clip_grad_norm_(self.model.parameters(), self.args.clip_value)
 
-    def maybe_batch_transforms(self, x: Tensor) -> Tensor:
-        if self.train_dataset.batch_transforms is not None:
-            return self.train_dataset.batch_transforms(x)
+    def prepare_inputs(self, x: Tensor, device: torch.device) -> Tensor:
+        if self.batch_transforms_cpu is not None:
+            x = self.batch_transforms_cpu(x)
+        x = x.to(device, non_blocking=True)
+        if self.batch_transforms_device is not None:
+            x = self.batch_transforms_device(x)
         return x

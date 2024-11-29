@@ -12,14 +12,16 @@ def identity(x):
 
 
 class CachedDataset(Dataset):
-    def __init__(self, dataset, transforms=None, num_classes=None, cache=True, batch_transforms=None):
+    def __init__(self, dataset, transforms=None, num_classes=None, cache=True, batch_transforms_cpu=None,
+                 batch_transforms_device=None):
         if cache:
             self.data = tuple([x for x in dataset])
         else:
             self.data = dataset
         self.transforms = transforms
         self.num_classes = num_classes
-        self.batch_transforms = batch_transforms
+        self.batch_transforms_cpu = batch_transforms_cpu
+        self.batch_transforms_device = batch_transforms_device
 
     def __len__(self):
         return len(self.data)
@@ -76,7 +78,8 @@ def init_dataset(args):
         transforms=transforms.train_runtime(),
         num_classes=num_classes,
         cache=cache_train_dataset,
-        batch_transforms=transforms.batch_transforms(),
+        batch_transforms_cpu=transforms.batch_transforms_cpu(),
+        batch_transforms_device=transforms.batch_transforms_device(),
     )
 
     test_dataset = dataset_fn(train=False, transform=transforms.test_cached())
@@ -91,7 +94,7 @@ def init_dataset(args):
 
 
 def init_loaders(
-    args, train_dataset: CachedDataset, test_dataset: CachedDataset, pin_memory
+        args, train_dataset: CachedDataset, test_dataset: CachedDataset, pin_memory
 ):
     shuffle_train = True if not hasattr(args, "shuffle_train") else args.shuffle_train
     num_workers = 0 if not hasattr(args, "num_workers") else args.num_workers

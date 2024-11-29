@@ -32,7 +32,10 @@ class DatasetTransforms(ABC):
     def test_runtime(self):
         pass
 
-    def batch_transforms(self):
+    def batch_transforms_device(self):
+        return None
+
+    def batch_transforms_cpu(self):
         return None
 
 
@@ -66,10 +69,13 @@ class MNISTTransforms(DatasetTransforms):
     def test_runtime(self):
         return None
 
-    def batch_transforms(self):
+    def batch_transforms_device(self):
         return v2.Compose([
             BatchHorizontalFlip(),
         ])
+
+    def batch_transforms_cpu(self):
+        return None
 
 
 class CifarTransforms(DatasetTransforms):
@@ -98,11 +104,6 @@ class CifarTransforms(DatasetTransforms):
             transforms.append(
                 v2.AutoAugment(v2.AutoAugmentPolicy.CIFAR10, fill=self.args.fill)
             )
-        if self.args.cutout:
-            fill_value = 0 if self.args.fill is None else self.args.fill
-            transforms.append(
-                v2.RandomErasing(scale=(0.05, 0.15), value=fill_value, inplace=True)
-            )
 
         transforms.append(self.normalize)
         transforms = v2.Compose(transforms)
@@ -120,11 +121,27 @@ class CifarTransforms(DatasetTransforms):
     def test_runtime(self):
         return None
 
-    def batch_transforms(self):
+    def create_cutout(self, batched: bool):
+        fill_value = 0 if self.args.fill is None else self.args.fill
+        if batched:
+            fill = []
+            for mean, std in zip(self.normalize.mean, self.normalize.std):
+                fill.append((fill_value - mean) / std)
+            fill_value = tuple(fill)
+
+        return v2.RandomErasing(scale=(0.05, 0.15), value=fill_value, inplace=True)
+
+    def batch_transforms_device(self):
         return v2.Compose([
             BatchHorizontalFlip(),
         ])
 
+    def batch_transforms_cpu(self):
+        if self.args.cutout:
+            return v2.Compose([
+                self.create_cutout(batched=False)
+            ])
+        return None
 
 class FashionMNISTTransforms(CifarTransforms):
     def __init__(self, args):
