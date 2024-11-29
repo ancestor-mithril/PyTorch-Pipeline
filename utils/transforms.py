@@ -1,4 +1,5 @@
 from abc import ABC, abstractmethod
+from typing import Sequence, Callable
 
 import torch
 from torch import nn, Tensor
@@ -6,13 +7,50 @@ from torchvision.transforms import v2
 
 
 class BatchHorizontalFlip(nn.Module):
-    def __init__(self, p: int = 0.5):
+    def __init__(self, p: float = 0.5):
         super().__init__()
         self.p = p
 
     def forward(self, x: Tensor) -> Tensor:
         flip_mask = (torch.rand(len(x), device=x.device) < self.p).view(-1, 1, 1, 1)
         return torch.where(flip_mask, x.flip(-1), x)
+
+
+class AlternativeHorizontalFlip(nn.Module):
+    # Inspired from https://github.com/KellerJordan/cifar10-airbench
+    # https://arxiv.org/abs/2404.00498: 94% on CIFAR-10 in 3.29 Seconds on a Single GPU
+    def __init__(self):
+        super().__init__()
+        self.epoch: int = 0
+
+    @staticmethod
+    def init(x: Tensor) -> Tensor:
+        return BatchHorizontalFlip(p=0.5)(x)
+
+    def step(self):
+        self.epoch += 1
+
+    def forward(self, x: Tensor) -> Tensor:
+        if self.epoch % 2 == 1:
+            return x.flip(-1)
+        return x
+
+
+class StepCompose(v2.Compose):
+    def __init__(self, transforms: Sequence[Callable]):
+        super().__init__(transforms)
+        self.need_step = [x for x in self.transforms if hasattr(x, "step")]
+
+    def init(self, x: Tensor) -> Tensor:
+        for transform in self.transforms:
+            if hasattr(transform, "init"):
+                x = transform.init(x)
+        return x
+
+    def step(self):
+        for transform in self.transforms:
+            if hasattr(transform, "step"):
+                transform.step()
 
 
 class DatasetTransforms(ABC):
@@ -69,11 +107,12 @@ class MNISTTransforms(DatasetTransforms):
         return None
 
     def batch_transforms_cpu(self):
+        # TODO: Use this in collate_fn
         return None
 
     def batch_transforms_device(self):
-        return v2.Compose([
-            BatchHorizontalFlip(),
+        return StepCompose([
+            AlternativeHorizontalFlip(), # TODO: move on cpu
             self.normalize
         ])
 
@@ -126,14 +165,14 @@ class CifarTransforms(DatasetTransforms):
 
     def batch_transforms_cpu(self):
         if self.args.cutout:
-            return v2.Compose([
+            return StepCompose([
                 self.create_cutout()
             ])
         return None
 
     def batch_transforms_device(self):
-        return v2.Compose([
-            BatchHorizontalFlip(),
+        return StepCompose([
+            AlternativeHorizontalFlip(),
             self.normalize
         ])
 

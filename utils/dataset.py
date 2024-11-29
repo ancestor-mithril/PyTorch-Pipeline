@@ -1,10 +1,12 @@
 from functools import partial
+from typing import Optional
 
+import torch
 from torch.utils.data import Dataset, DataLoader
 from torchvision.datasets import CIFAR10, CIFAR100, FashionMNIST, MNIST
 
 from .datasets import CIFAR100_noisy_fine
-from .transforms import init_transforms
+from .transforms import init_transforms, StepCompose
 
 
 def identity(x):
@@ -12,25 +14,35 @@ def identity(x):
 
 
 class CachedDataset(Dataset):
-    def __init__(self, dataset, transforms=None, num_classes=None, cache=True, batch_transforms_cpu=None,
-                 batch_transforms_device=None):
-        if cache:
-            self.data = tuple([x for x in dataset])
-        else:
-            self.data = dataset
+    def __init__(self, dataset, transforms=None, num_classes=None, batch_transforms_cpu: Optional[StepCompose] = None,
+                 batch_transforms_device: Optional[StepCompose] = None):
         self.transforms = transforms
         self.num_classes = num_classes
         self.batch_transforms_cpu = batch_transforms_cpu
         self.batch_transforms_device = batch_transforms_device
+        self.data, self.targets = self.cache_dataset(dataset)
+
+    def cache_dataset(self, dataset):
+        data = []
+        targets = []
+        for x, y in dataset:
+            data.append(x)
+            targets.append(y)
+        data = torch.stack(data)
+        if self.batch_transforms_cpu is not None:
+            data = self.batch_transforms_cpu.init(data)
+        if self.batch_transforms_device is not None:
+            data = self.batch_transforms_device.init(data)
+        return tuple(data), tuple(targets)
 
     def __len__(self):
         return len(self.data)
 
     def __getitem__(self, i):
+        data = self.data[i]
         if self.transforms is not None:
-            image, label = self.data[i]
-            return self.transforms(image), label
-        return self.data[i]
+            data = self.transforms(data)
+        return data, self.targets[i]
 
 
 def init_dataset(args):
@@ -65,19 +77,11 @@ def init_dataset(args):
 
     transforms = init_transforms(args)
 
-    cache_train_dataset = (
-        True if not hasattr(args, "cache_train_dataset") else args.cache_train_dataset
-    )
-    cache_test_dataset = (
-        True if not hasattr(args, "cache_test_dataset") else args.cache_test_dataset
-    )
-
     train_dataset = dataset_fn(train=True, transform=transforms.train_cached())
     train_dataset = CachedDataset(
         train_dataset,
         transforms=transforms.train_runtime(),
         num_classes=num_classes,
-        cache=cache_train_dataset,
         batch_transforms_cpu=transforms.batch_transforms_cpu(),
         batch_transforms_device=transforms.batch_transforms_device(),
     )
@@ -87,7 +91,6 @@ def init_dataset(args):
         test_dataset,
         transforms=transforms.test_runtime(),
         num_classes=num_classes,
-        cache=cache_test_dataset,
     )
 
     return train_dataset, test_dataset

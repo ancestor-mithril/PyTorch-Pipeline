@@ -257,6 +257,10 @@ class Trainer:
         self.empty_cache()
         self.save_checkpoint(metrics)
         self.scheduler_step(metrics)
+        if self.batch_transforms_cpu is not None:
+            self.batch_transforms_cpu.step()
+        if self.batch_transforms_device is not None:
+            self.batch_transforms_device.step()
 
     def epoch_description(self, metrics):
         train_acc = round(metrics["Train/Accuracy"], 2)
