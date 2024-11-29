@@ -5,7 +5,7 @@ from functools import cached_property
 
 import torch
 from timed_decorator.simple_timed import timed
-from torch import GradScaler
+from torch import GradScaler, Tensor
 from torch.backends import cudnn
 from torch.nn.utils import clip_grad_norm_
 from torch.utils.tensorboard import SummaryWriter
@@ -168,9 +168,9 @@ class Trainer:
         total_loss = 0.0
 
         for inputs, targets in self.train_loader:
-            inputs, targets = inputs.to(self.device, non_blocking=True), targets.to(
-                self.device, non_blocking=True
-            )
+            inputs = inputs.to(self.device, non_blocking=True)
+            targets = targets.to(self.device, non_blocking=True)
+            inputs = self.maybe_batch_transforms(inputs)
             with torch.autocast(self.device.type, enabled=self.args.half):
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, targets)
@@ -195,10 +195,11 @@ class Trainer:
         total_loss = 0.0
 
         for inputs, targets in self.test_loader:
-            inputs, targets = inputs.to(self.device, non_blocking=True), targets.to(
-                self.device, non_blocking=True
-            )
+            inputs = inputs.to(self.device, non_blocking=True)
+            targets = targets.to(self.device, non_blocking=True)
+
             with torch.autocast(self.device.type, enabled=self.args.half):
+                # TODO: put TTA in batch
                 outputs = self.model(inputs)
                 loss = self.criterion(outputs, targets)
                 if self.args.tta:
@@ -282,3 +283,8 @@ class Trainer:
         if self.args.clip_value is not None:
             self.scaler.unscale_(self.optimizer)
             clip_grad_norm_(self.model.parameters(), self.args.clip_value)
+
+    def maybe_batch_transforms(self, x: Tensor) -> Tensor:
+        if self.train_dataset.batch_transforms is not None:
+            return self.train_dataset.batch_transforms(x)
+        return x

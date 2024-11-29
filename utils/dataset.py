@@ -12,13 +12,14 @@ def identity(x):
 
 
 class CachedDataset(Dataset):
-    def __init__(self, dataset, transforms=None, num_classes=None, cache=True):
+    def __init__(self, dataset, transforms=None, num_classes=None, cache=True, batch_transforms=None):
         if cache:
             self.data = tuple([x for x in dataset])
         else:
             self.data = dataset
         self.transforms = transforms
         self.num_classes = num_classes
+        self.batch_transforms = batch_transforms
 
     def __len__(self):
         return len(self.data)
@@ -75,6 +76,7 @@ def init_dataset(args):
         transforms=transforms.train_runtime(),
         num_classes=num_classes,
         cache=cache_train_dataset,
+        batch_transforms=transforms.batch_transforms(),
     )
 
     test_dataset = dataset_fn(train=False, transform=transforms.test_cached())
