@@ -261,6 +261,8 @@ class Trainer:
             self.batch_transforms_cpu.step()
         if self.batch_transforms_device is not None:
             self.batch_transforms_device.step()
+        if hasattr(self.criterion, "step"):
+            self.criterion.step()
 
     def epoch_description(self, metrics):
         train_acc = round(metrics["Train/Accuracy"], 2)

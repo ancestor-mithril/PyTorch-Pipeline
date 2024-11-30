@@ -73,18 +73,15 @@ class LossScaler(nn.Module):
         self.loss = loss
         self.reducer = reducer
         self.loss_scaling_range = float(os.getenv("loss_scaling_range", 0.25))
+        self.patience = int(os.getenv("loss_scaling_patience", 3000))
+        self.last_epoch = 0
         get_logger().log_both(
             f"Using Loss scaling with scaling range: {self.loss_scaling_range}"
         )
 
-    def get_weights(
-        self, shape: torch.Size, dtype: torch.dtype, device: torch.device
-    ) -> Tensor:
-        return self._get_weights_impl(shape, dtype, device)
-
     @abstractmethod
-    def _get_weights_impl(
-        self, shape: torch.Size, dtype: torch.dtype, device: torch.device
+    def get_weights(
+            self, shape: torch.Size, dtype: torch.dtype, device: torch.device
     ) -> Tensor:
         pass
 
@@ -94,10 +91,16 @@ class LossScaler(nn.Module):
             loss * self.get_weights(loss.shape, loss.dtype, loss.device)
         )
 
+    def step(self):
+        self.last_epoch += 1
+        if self.last_epoch == self.patience:
+            self.last_epoch = 0
+            self.loss_scaling_range /= 2
+
 
 class NormalScalingLoss(LossScaler):
-    def _get_weights_impl(
-        self, shape: torch.Size, dtype: torch.dtype, device: torch.device
+    def get_weights(
+            self, shape: torch.Size, dtype: torch.dtype, device: torch.device
     ) -> Tensor:
         return torch.normal(
             1.0, self.loss_scaling_range, shape, dtype=dtype, device=device
@@ -105,8 +108,8 @@ class NormalScalingLoss(LossScaler):
 
 
 class UniformScalingLoss(LossScaler):
-    def _get_weights_impl(
-        self, shape: torch.Size, dtype: torch.dtype, device: torch.device
+    def get_weights(
+            self, shape: torch.Size, dtype: torch.dtype, device: torch.device
     ) -> Tensor:
         return torch.zeros(shape, dtype=dtype, device=device).uniform_(
             1 - self.loss_scaling_range, 1 + self.loss_scaling_range
@@ -129,7 +132,6 @@ def init_criterion(args):
     else:
         loss = loss(reduction=args.reduction if args.loss_scaling is None else "none")
 
-    # TODO: Add decay to loss scaling
     if args.loss_scaling is None:
         return loss
     elif args.loss_scaling == "normal-scaling":

@@ -62,5 +62,4 @@ class TimeAccumulator:
         ret, elapsed = timed(return_time=True, stdout=False)(self.fn)(*args, **kwargs)
         self.total += elapsed
         self.calls += 1
-        print(self.total / self.calls)
         return ret
