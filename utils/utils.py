@@ -2,6 +2,7 @@ import random
 
 import numpy as np
 import torch
+from timed_decorator.simple_timed import timed
 
 from utils.logger import get_logger
 
@@ -49,3 +50,17 @@ def try_optimize(x, optimization: str = "script"):
     elif optimization == "compile":
         return try_compile(x)  # torch.compile may also raise during training
     raise NotImplementedError(f"Optimization {optimization} not implemented")
+
+
+class TimeAccumulator:
+    def __init__(self, fn):
+        self.total = 0
+        self.calls = 0
+        self.fn = fn
+
+    def __call__(self, *args, **kwargs):
+        ret, elapsed = timed(return_time=True, stdout=False)(self.fn)(*args, **kwargs)
+        self.total += elapsed
+        self.calls += 1
+        print(self.total / self.calls)
+        return ret

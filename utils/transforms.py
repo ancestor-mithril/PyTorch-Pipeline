@@ -1,6 +1,6 @@
 import math
 from abc import ABC, abstractmethod
-from typing import Sequence, Callable, Union
+from typing import Sequence, Callable
 
 import torch
 from torch import nn, Tensor
@@ -190,8 +190,8 @@ class CifarTransforms(DatasetTransforms):
 
     def create_cutout(self):
         fill_value = 0 if self.args.fill is None else self.args.fill
-        # return v2.RandomErasing(scale=(0.05, 0.15), value=fill_value, inplace=True)
-        return torch.jit.script(BatchCutout(value=fill_value))
+        # v2.RandomErasing(scale=(0.05, 0.15), value=fill_value, inplace=True)
+        return BatchCutout(value=fill_value)
 
     def batch_transforms_cpu(self):
         transforms = [
