@@ -5,7 +5,7 @@ from functools import cached_property
 
 import torch
 from timed_decorator.simple_timed import timed
-from torch import GradScaler, Tensor, nn
+from torch import GradScaler, Tensor
 from torch.backends import cudnn
 from torch.nn.utils import clip_grad_norm_
 from torch.utils.tensorboard import SummaryWriter

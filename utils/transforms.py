@@ -39,7 +39,6 @@ class AlternativeHorizontalFlip(nn.Module):
 class StepCompose(v2.Compose):
     def __init__(self, transforms: Sequence[Callable]):
         super().__init__(transforms)
-        self.need_step = [x for x in self.transforms if hasattr(x, "step")]
 
     def init(self, x: Tensor) -> Tensor:
         for transform in self.transforms:
@@ -126,14 +125,13 @@ class CifarTransforms(DatasetTransforms):
             [
                 v2.ToImage(),
                 v2.ToDtype(torch.float32, scale=True),
+                v2.Pad(padding=4, fill=0 if self.args.fill is None else self.args.fill)
             ]
         )
 
     def train_runtime(self):
         transforms = [
-            v2.RandomCrop(
-                32, padding=4, fill=0 if self.args.fill is None else self.args.fill
-            ),
+            v2.RandomCrop(32),
         ]
 
         if self.args.autoaug:
