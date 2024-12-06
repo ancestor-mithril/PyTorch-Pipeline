@@ -243,13 +243,7 @@ class Trainer:
             "ReduceLROnPlateau",
             "IncreaseBSOnPlateau",
         ):
-            scheduler_metric = metrics[self.scheduler_metric]
-
-            if type(self.scheduler).__name__ == "IncreaseBSOnPlateau":
-                self.scheduler.step(metric=scheduler_metric)
-                # TODO: keep the same name
-            else:
-                self.scheduler.step(scheduler_metric)
+            self.scheduler.step(metrics=metrics[self.scheduler_metric])
         else:
             self.scheduler.step()
 
