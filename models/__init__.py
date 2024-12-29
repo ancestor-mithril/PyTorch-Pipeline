@@ -21,6 +21,10 @@ def create_norm(new: Type, args: Any) -> nn.Module:
     return new(args)
 
 
+def create_instance_norm(new: Type, args: Any) -> nn.Module:
+    return new(args, affine=True)
+
+
 def replace_layers(model: nn.Module, old: Type, new: Type, furbish_old: Callable[[nn.Module], Any],
                    create_new: Callable[[Type, Any], nn.Module]):
     for n, module in model.named_children():
@@ -35,6 +39,8 @@ def replace_layers(model: nn.Module, old: Type, new: Type, furbish_old: Callable
 def replace_bn(model: nn.Module, norm_type: str):
     if norm_type == 'Identity':
         create_fn = create_identity
+    elif 'InstanceNorm' in norm_type:
+        create_fn = create_instance_norm
     else:
         create_fn = create_norm
     norm_type = getattr(nn, norm_type)
