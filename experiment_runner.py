@@ -130,32 +130,39 @@ def generate_runs():
         "sgd"
     ]
     seeds = [
-        2525
+        5
     ]
     epochss = [
-        200
+        175
     ]
     es_patiences = [
         20
     ]
     batch_sizes = [
-        64
+        2048
     ]
     lrs = [
-       0.1, 0.075, 0.05, 0.025, 0.01
+        # 0.1, 0.075, 0.05, 0.025, 0.01
+        0.175,
+        0.15,
+        0.125,
+        0.1,
     ]
     reductions = [
         "mean"
     ]
     schedulers = [
+        # ("StepLR", {"step_size": 20, "gamma": 0.5}),
         ("StepLR", {"step_size": 30, "gamma": 0.5}),
+        ("StepLR", {"step_size": 30, "gamma": 0.5}),
+        # ("StepLR", {"step_size": 40, "gamma": 0.5}),
     ]
     loss_scalings = [
         None,
         "uniform-scaling", "normal-scaling"
     ]
     loss_scaling_ranges = [
-        '0.1', '0.25', '0.5', '0.75'
+        '0.1', '0.25', '0.5', # '0.75'
     ]
 
     runs = []
@@ -200,11 +207,20 @@ def generate_runs():
         )
         if loss_scaling is not None:
             for loss_scaling_range in loss_scaling_ranges:
-                runs.append(run)
-                envs.append({'loss_scaling_range': loss_scaling_range})
+                for patience in ('20', '30'):
+                    runs.append(run)
+                    envs.append({
+                        'loss_scaling_range': loss_scaling_range,
+                        'loss_scaling_patience': patience,
+                        'NN_norm_type': 'InstanceNorm2d',
+                        # 'NN_norm_type': 'Identity',
+                    })
         else:
             runs.append(run)
-            envs.append({})
+            envs.append({
+                'NN_norm_type': 'InstanceNorm2d',
+                # 'NN_norm_type': 'Identity',
+            })
 
     return [f"python main.py {i}" for i in runs], envs
 
@@ -221,8 +237,9 @@ if __name__ == "__main__":
     if last_index == -1 or last_index > len(runs):
         last_index = len(runs)
 
+    os.makedirs("./logs", exist_ok=True)
     with open("./logs/finished_runs.txt", "a+") as fp:
-        fp.write("New experiment: ")
+        fp.write("New experiment: InstanceNorm2d")
         fp.write("\n")
 
     try:

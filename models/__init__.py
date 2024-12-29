@@ -1,7 +1,7 @@
 import os
-from typing import Type
+from typing import Type, Callable, Any
 
-import torch.nn
+from torch import nn
 
 from utils.logger import get_logger
 from .cnn import CNN_MNIST
@@ -9,21 +9,39 @@ from .lenet import LeNet_MNIST
 from .preresnet import PreActResNet18_C10
 
 
-def replace_layers(model: torch.nn.Module, old: Type, new: Type):
+def get_bn_features(bn_layer) -> Any:
+    return bn_layer.num_features
+
+
+def create_identity(new: Type, args: Any) -> nn.Module:
+    return new()
+
+
+def create_norm(new: Type, args: Any) -> nn.Module:
+    return new(args)
+
+
+def replace_layers(model: nn.Module, old: Type, new: Type, furbish_old: Callable[[nn.Module], Any],
+                   create_new: Callable[[Type, Any], nn.Module]):
     for n, module in model.named_children():
         if len(list(module.children())) > 0:
-            replace_layers(module, old, new)
+            replace_layers(module, old, new, furbish_old, create_new)
 
         if isinstance(module, old):
-            setattr(model, n, new())
+            args = furbish_old(module)
+            setattr(model, n, create_new(new, args))
 
 
-def replace_bn(model: torch.nn.Module, norm_type: str):
-    norm_type = getattr(torch.nn, norm_type)
-    replace_layers(model, torch.nn.BatchNorm2d, norm_type)
+def replace_bn(model: nn.Module, norm_type: str):
+    if norm_type == 'Identity':
+        create_fn = create_identity
+    else:
+        create_fn = create_norm
+    norm_type = getattr(nn, norm_type)
+    replace_layers(model, nn.BatchNorm2d, norm_type, get_bn_features, create_fn)
 
 
-def init_model(args, num_classes) -> torch.nn.Module:
+def init_model(args, num_classes) -> nn.Module:
     if args.model == "preresnet18_c10":
         model = PreActResNet18_C10(num_classes)
     elif args.model == "lenet_mnist":
