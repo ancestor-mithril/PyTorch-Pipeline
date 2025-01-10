@@ -2,6 +2,7 @@ import os
 import re
 from datetime import datetime
 from functools import cached_property
+from typing import Tuple
 
 import torch
 from timed_decorator.simple_timed import timed
@@ -19,6 +20,7 @@ from utils.logger import init_logger
 from utils.loss import init_criterion
 from utils.optimizer import init_optimizer
 from utils.scheduler import init_scheduler
+from utils.transforms import init_cutmix_or_mixup
 from utils.utils import seed_everything, try_optimize
 
 
@@ -53,6 +55,7 @@ class Trainer:
         self.train_loader, self.test_loader = init_loaders(
             args, self.train_dataset, self.test_dataset, pin_memory
         )
+        self.cutmix_or_mixup = init_cutmix_or_mixup(args.cutmix_mixup, self.train_dataset.num_classes)
 
         self.model = init_model(args, self.train_dataset.num_classes).to(self.device)
 
@@ -170,8 +173,7 @@ class Trainer:
         total_loss = 0.0
 
         for inputs, targets in self.train_loader:
-            inputs = self.prepare_inputs(inputs, self.device)
-            targets = targets.to(self.device, non_blocking=True)
+            inputs, targets = self.prepare_data(inputs, targets, self.device)
 
             with torch.autocast(self.device.type, enabled=self.args.half):
                 outputs = self.model(inputs)
@@ -185,6 +187,8 @@ class Trainer:
             total_loss += loss.item()
             predicted = outputs.argmax(1)
             total += targets.size(0)
+            if targets.ndim > 1:
+                targets = targets.argmax(1)
             correct += predicted.eq(targets).sum().item()
 
         return {"Train/Accuracy": 100.0 * correct / total, "Train/Loss": total_loss}
@@ -286,8 +290,11 @@ class Trainer:
             self.scaler.unscale_(self.optimizer)
             clip_grad_norm_(self.model.parameters(), self.args.clip_value)
 
-    def prepare_inputs(self, x: Tensor, device: torch.device) -> Tensor:
+    def prepare_data(self, x: Tensor, y: Tensor, device: torch.device) -> Tuple[Tensor, Tensor]:
         x = x.to(device, non_blocking=True)
+        y = y.to(device, non_blocking=True)
         if self.batch_transforms_device is not None:
-            return self.batch_transforms_device(x)
-        return x
+            x = self.batch_transforms_device(x)
+        if self.cutmix_or_mixup is not None:
+            x, y = self.cutmix_or_mixup(x, y)
+        return x, y

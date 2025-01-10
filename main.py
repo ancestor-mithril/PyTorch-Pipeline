@@ -74,6 +74,12 @@ if __name__ == "__main__":
         default=False,
         help="log to stderr instead of stdout",
     )
+    parser.add_argument(
+        "--cutmix_mixup",
+        action="store_true",
+        default=False,
+        help="use cutmix and mixup",
+    )
 
     args = parser.parse_args()
     args.scheduler_params = json.loads(args.scheduler_params.replace("'", '"'))

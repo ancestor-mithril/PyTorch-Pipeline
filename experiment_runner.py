@@ -109,6 +109,7 @@ def create_run(
         f" --disable_progress_bar"
         f" --stderr"
         f" --verbose"
+        f" --cutmix_mixup"
     ) + (
         " --half" if torch.cuda.is_available() else ""
     ) + (

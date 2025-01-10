@@ -222,3 +222,11 @@ def init_transforms(args) -> DatasetTransforms:
     if args.dataset in ("MNIST", "DirtyMNIST"):
         return MNISTTransforms(args)
     raise NotImplementedError(f"Transforms not implemented for {args.dataset}")
+
+
+def init_cutmix_or_mixup(use_cutmix_or_mixup, num_classes):
+    if use_cutmix_or_mixup:
+        cutmix = v2.CutMix(num_classes=num_classes)
+        mixup = v2.MixUp(num_classes=num_classes)
+        return v2.RandomChoice([cutmix, mixup])
+    return None
